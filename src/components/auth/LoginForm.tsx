@@ -40,7 +40,7 @@ const LoginForm = ({ onSwitchToRegister, onClose }: LoginFormProps) => {
         <div className="flex items-center justify-center space-x-2">
           <Brain className="h-8 w-8 text-primary animate-glow" />
           <span className="text-2xl font-bold text-foreground">
-            Prompt<span className="text-primary">Guide</span>
+            IA <span className="text-primary">Transformers</span>
           </span>
         </div>
         <div>

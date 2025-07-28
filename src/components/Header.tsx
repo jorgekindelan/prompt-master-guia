@@ -41,7 +41,7 @@ const Header = () => {
               <Brain className="h-8 w-8 text-primary animate-glow" />
             </div>
             <span className="text-xl font-bold text-foreground">
-              Prompt<span className="text-primary">Guide</span>
+              IA <span className="text-primary">Transformers</span>
             </span>
           </div>
 
