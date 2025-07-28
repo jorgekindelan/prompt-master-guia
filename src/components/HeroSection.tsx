@@ -31,8 +31,8 @@ const HeroSection = () => {
           </h1>
           
           <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Experimenta con modelos de IA transformer de última generación y obtén resultados profesionales 
-            con técnicas avanzadas y herramientas interactivas.
+            Tu playground de IA Transformers donde puedes aprender, crear prompts profesionales, 
+            compartir tus creaciones y explorar los prompts de la comunidad.
           </p>
 
           {/* CTA Buttons */}
