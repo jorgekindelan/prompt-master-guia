@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Mail, Lock, User, Brain } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
 interface RegisterFormProps {
@@ -14,6 +15,7 @@ interface RegisterFormProps {
 }
 
 const RegisterForm = ({ onSwitchToLogin, onClose }: RegisterFormProps) => {
+  const { signUp, loading } = useAuth();
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
@@ -24,7 +26,6 @@ const RegisterForm = ({ onSwitchToLogin, onClose }: RegisterFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -51,17 +52,11 @@ const RegisterForm = ({ onSwitchToLogin, onClose }: RegisterFormProps) => {
       return;
     }
 
-    setIsLoading(true);
-
-    // Simulación de registro
-    setTimeout(() => {
-      toast({
-        title: "¡Cuenta creada!",
-        description: "Te has registrado exitosamente",
-      });
-      setIsLoading(false);
+    const { error } = await signUp(formData.email, formData.password, formData.name);
+    
+    if (!error) {
       onClose();
-    }, 1500);
+    }
   };
 
   return (
@@ -180,9 +175,9 @@ const RegisterForm = ({ onSwitchToLogin, onClose }: RegisterFormProps) => {
           <Button 
             type="submit" 
             className="w-full bg-primary hover:bg-primary/90"
-            disabled={isLoading}
+            disabled={loading}
           >
-            {isLoading ? "Creando cuenta..." : "Crear Cuenta"}
+            {loading ? "Creando cuenta..." : "Crear Cuenta"}
           </Button>
         </form>
 

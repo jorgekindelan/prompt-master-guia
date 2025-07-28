@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Mail, Lock, Brain } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
@@ -13,25 +13,19 @@ interface LoginFormProps {
 }
 
 const LoginForm = ({ onSwitchToRegister, onClose }: LoginFormProps) => {
-  const { toast } = useToast();
+  const { signIn, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    // Simulación de login
-    setTimeout(() => {
-      toast({
-        title: "¡Bienvenido de vuelta!",
-        description: "Has iniciado sesión correctamente",
-      });
-      setIsLoading(false);
+    
+    const { error } = await signIn(email, password);
+    
+    if (!error) {
       onClose();
-    }, 1500);
+    }
   };
 
   return (
@@ -95,9 +89,9 @@ const LoginForm = ({ onSwitchToRegister, onClose }: LoginFormProps) => {
           <Button 
             type="submit" 
             className="w-full bg-primary hover:bg-primary/90"
-            disabled={isLoading}
+            disabled={loading}
           >
-            {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
+            {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
           </Button>
         </form>
 

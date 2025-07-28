@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Moon, Sun, Brain, User } from "lucide-react";
+import { Menu, X, Moon, Sun, Brain, User, LogOut, LayoutDashboard } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useAuth } from "@/hooks/useAuth";
+import { useLocation, useNavigate } from "react-router-dom";
 import AuthDialog from "./auth/AuthDialog";
 
 const Header = () => {
@@ -9,6 +11,9 @@ const Header = () => {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const { theme, setTheme } = useTheme();
+  const { user, signOut, loading } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const menuItems = [
     { label: "Inicio", href: "#inicio" },
@@ -24,9 +29,21 @@ const Header = () => {
   };
 
   const scrollToSection = (href: string) => {
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
+    // If we're not on the home page, navigate there first
+    if (location.pathname !== '/') {
+      navigate('/');
+      // Wait a bit for navigation to complete then scroll
+      setTimeout(() => {
+        const element = document.querySelector(href);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+    } else {
+      const element = document.querySelector(href);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
     }
     setIsMenuOpen(false);
   };
@@ -36,7 +53,10 @@ const Header = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
+          <div 
+            className="flex items-center space-x-2 cursor-pointer"
+            onClick={() => navigate('/')}
+          >
             <div className="relative">
               <Brain className="h-8 w-8 text-primary animate-glow" />
             </div>
@@ -47,7 +67,7 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            {menuItems.map((item) => (
+            {location.pathname === '/' && menuItems.map((item) => (
               <button
                 key={item.label}
                 onClick={() => scrollToSection(item.href)}
@@ -56,18 +76,45 @@ const Header = () => {
                 {item.label}
               </button>
             ))}
+            {user && (
+              <Button
+                variant={location.pathname === '/dashboard' ? "default" : "ghost"}
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center space-x-2"
+              >
+                <LayoutDashboard className="h-4 w-4" />
+                <span>Dashboard</span>
+              </Button>
+            )}
           </nav>
 
           {/* Auth & Theme Toggle & Mobile Menu */}
           <div className="flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              onClick={() => openAuth("login")}
-              className="hidden md:flex items-center space-x-2 hover:bg-muted"
-            >
-              <User className="h-4 w-4" />
-              <span>Iniciar Sesión</span>
-            </Button>
+            {user ? (
+              <div className="hidden md:flex items-center space-x-2">
+                <span className="text-sm text-muted-foreground">
+                  Hola, {user.user_metadata?.display_name || user.email}
+                </span>
+                <Button
+                  variant="ghost"
+                  onClick={signOut}
+                  disabled={loading}
+                  className="flex items-center space-x-2 hover:bg-muted"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Salir</span>
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="ghost"
+                onClick={() => openAuth("login")}
+                className="hidden md:flex items-center space-x-2 hover:bg-muted"
+              >
+                <User className="h-4 w-4" />
+                <span>Iniciar Sesión</span>
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -94,7 +141,7 @@ const Header = () => {
         {isMenuOpen && (
           <nav className="md:hidden mt-4 pb-4 animate-slide-up">
             <div className="flex flex-col space-y-2">
-              {menuItems.map((item) => (
+              {location.pathname === '/' && menuItems.map((item) => (
                 <button
                   key={item.label}
                   onClick={() => scrollToSection(item.href)}
@@ -103,12 +150,39 @@ const Header = () => {
                   {item.label}
                 </button>
               ))}
-              <button
-                onClick={() => openAuth("login")}
-                className="text-left px-4 py-2 text-foreground hover:text-primary hover:bg-muted rounded-md transition-colors duration-200"
-              >
-                Iniciar Sesión
-              </button>
+              {user && (
+                <button
+                  onClick={() => {
+                    navigate('/dashboard');
+                    setIsMenuOpen(false);
+                  }}
+                  className="text-left px-4 py-2 text-foreground hover:text-primary hover:bg-muted rounded-md transition-colors duration-200 flex items-center space-x-2"
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  <span>Dashboard</span>
+                </button>
+              )}
+              {user ? (
+                <>
+                  <div className="px-4 py-2 text-sm text-muted-foreground">
+                    Hola, {user.user_metadata?.display_name || user.email}
+                  </div>
+                  <button
+                    onClick={signOut}
+                    disabled={loading}
+                    className="text-left px-4 py-2 text-foreground hover:text-primary hover:bg-muted rounded-md transition-colors duration-200"
+                  >
+                    Cerrar Sesión
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => openAuth("login")}
+                  className="text-left px-4 py-2 text-foreground hover:text-primary hover:bg-muted rounded-md transition-colors duration-200"
+                >
+                  Iniciar Sesión
+                </button>
+              )}
             </div>
           </nav>
         )}
