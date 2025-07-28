@@ -1,16 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Zap, Target } from "lucide-react";
-
 const HeroSection = () => {
   const scrollToGuide = () => {
     const element = document.querySelector('#guia');
     if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
+      element.scrollIntoView({
+        behavior: "smooth"
+      });
     }
   };
-
-  return (
-    <section id="inicio" className="relative min-h-screen flex items-center justify-center overflow-hidden">
+  return <section id="inicio" className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-hero opacity-90"></div>
       
@@ -30,28 +29,18 @@ const HeroSection = () => {
             <span className="text-primary block mt-2">Playground</span>
           </h1>
           
-          <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Tu playground de IA Transformers donde puedes aprender, crear prompts profesionales, 
-            compartir tus creaciones y explorar los prompts de la comunidad.
-          </p>
+          <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">El playground de IA Transformers donde puedes aprender, crear prompts profesionales, compartir tus creaciones y explorar los prompts de la comunidad.</p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <Button 
-              size="lg" 
-              className="bg-primary hover:bg-primary/90 text-white px-8 py-6 text-lg font-semibold shadow-elegant animate-scale-in"
-              onClick={scrollToGuide}
-            >
+            <Button size="lg" className="bg-primary hover:bg-primary/90 text-white px-8 py-6 text-lg font-semibold shadow-elegant animate-scale-in" onClick={scrollToGuide}>
               Explorar Guía
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="border-white/30 text-white hover:bg-white/10 hover:text-white px-8 py-6 text-lg animate-scale-in delay-200"
-              onClick={() => document.querySelector('#builder')?.scrollIntoView({ behavior: 'smooth' })}
-            >
+            <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 hover:text-white px-8 py-6 text-lg animate-scale-in delay-200" onClick={() => document.querySelector('#builder')?.scrollIntoView({
+            behavior: 'smooth'
+          })}>
               Crear Prompt
               <Sparkles className="ml-2 h-5 w-5" />
             </Button>
@@ -69,10 +58,10 @@ const HeroSection = () => {
             
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
               <Target className="h-8 w-8 text-primary mb-3 mx-auto" />
-              <h3 className="text-white font-semibold mb-2">Plantillas Listas</h3>
-              <p className="text-white/80 text-sm">
-                Más de 50 plantillas para diferentes casos de uso y categorías
-              </p>
+              <h3 className="text-white font-semibold mb-2">Explora prompts</h3>
+              <p className="text-white/80 text-sm">Aprovecha ser parte de esta gran comunidad compartiendo y haciendo uso de diferentes prompts
+
+            </p>
             </div>
             
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
@@ -92,8 +81,6 @@ const HeroSection = () => {
           <div className="w-1 h-3 bg-white/70 rounded-full mt-2 animate-pulse"></div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default HeroSection;
