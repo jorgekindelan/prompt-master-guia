@@ -1123,65 +1123,126 @@ Incluye ejemplos de código para los componentes más críticos y considera trad
             </div>
 
             {/* Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Main Content */}
-              <div className="lg:col-span-2">
-                <Card className="shadow-card-custom animate-slide-up">
-                  <CardContent className="p-8">
-                    <div className="prose prose-lg max-w-none">
-                      <div className="whitespace-pre-line text-foreground leading-relaxed">
-                        {currentItem.content}
-                      </div>
+            <div className="max-w-4xl mx-auto">
+              {/* Main Article Content */}
+              <article className="animate-slide-up">
+                <div className="prose prose-lg max-w-none mb-12">
+                  <div className="text-foreground leading-relaxed text-lg">
+                    {currentItem.content.split('\n').map((paragraph, index) => {
+                      if (paragraph.trim() === '') return <br key={index} />;
+                      
+                      // Handle headers (lines starting with ##)
+                      if (paragraph.startsWith('## ')) {
+                        return (
+                          <h2 key={index} className="text-2xl font-bold text-foreground mt-8 mb-4 border-b border-muted pb-2">
+                            {paragraph.replace('## ', '')}
+                          </h2>
+                        );
+                      }
+                      
+                      // Handle subheaders (lines starting with ###)
+                      if (paragraph.startsWith('### ')) {
+                        return (
+                          <h3 key={index} className="text-xl font-semibold text-foreground mt-6 mb-3">
+                            {paragraph.replace('### ', '')}
+                          </h3>
+                        );
+                      }
+                      
+                      // Handle bold text (**text**)
+                      if (paragraph.includes('**')) {
+                        const parts = paragraph.split(/(\*\*.*?\*\*)/g);
+                        return (
+                          <p key={index} className="mb-4 leading-relaxed">
+                            {parts.map((part, partIndex) => {
+                              if (part.startsWith('**') && part.endsWith('**')) {
+                                return <strong key={partIndex} className="font-semibold text-primary">{part.slice(2, -2)}</strong>;
+                              }
+                              return part;
+                            })}
+                          </p>
+                        );
+                      }
+                      
+                      // Handle bullet points (lines starting with -)
+                      if (paragraph.startsWith('- ')) {
+                        return (
+                          <div key={index} className="flex items-start mb-2">
+                            <span className="text-primary mr-3 mt-1">•</span>
+                            <span className="leading-relaxed">{paragraph.replace('- ', '')}</span>
+                          </div>
+                        );
+                      }
+                      
+                      // Regular paragraphs
+                      return (
+                        <p key={index} className="mb-4 leading-relaxed">
+                          {paragraph}
+                        </p>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Examples Section */}
+                {currentItem.examples && currentItem.examples.length > 0 && (
+                  <section className="mt-12 border-t border-muted pt-12">
+                    <h2 className="text-3xl font-bold text-foreground mb-8 text-center">
+                      Ejemplos Prácticos
+                    </h2>
+                    
+                    <div className="space-y-8">
+                      {currentItem.examples.map((example: any, index: number) => (
+                        <div key={index} className="animate-slide-up" style={{ animationDelay: `${index * 200}ms` }}>
+                          <div className="bg-gradient-to-r from-muted/30 to-muted/10 rounded-xl p-8 border border-muted/50">
+                            <div className="flex items-center justify-between mb-6">
+                              <h3 className="text-xl font-semibold text-foreground">
+                                📝 {example.title}
+                              </h3>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => copyExample(example.content, example.title)}
+                                className="hover:bg-primary/10 shrink-0"
+                              >
+                                <Copy className="h-4 w-4 mr-2" />
+                                Copiar
+                              </Button>
+                            </div>
+                            
+                            <div className="bg-muted/50 rounded-lg p-6 border-l-4 border-primary">
+                              <pre className="text-sm text-foreground whitespace-pre-wrap leading-relaxed font-mono">
+                                {example.content}
+                              </pre>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
+                  </section>
+                )}
 
-              {/* Sidebar with Examples */}
-              <div className="space-y-6">
-                {currentItem.examples && currentItem.examples.map((example: any, index: number) => (
-                  <Card key={index} className="shadow-card-custom animate-slide-up" style={{ animationDelay: `${index * 200}ms` }}>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">{example.title}</CardTitle>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyExample(example.content, example.title)}
-                          className="hover:bg-primary/10"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="bg-muted/50 rounded-lg p-4 border-l-4 border-primary">
-                        <pre className="text-sm text-foreground whitespace-pre-wrap font-mono leading-relaxed">
-                          {example.content}
-                        </pre>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-
-                {/* Navigation to Builder */}
-                <Card className="shadow-card-custom bg-gradient-card">
-                  <CardContent className="p-6 text-center">
-                    <Lightbulb className="h-12 w-12 mx-auto mb-4 text-primary" />
-                    <CardTitle className="mb-4">¿Listo para crear?</CardTitle>
-                    <CardDescription className="mb-6">
-                      Usa nuestro builder interactivo para crear prompts personalizados
-                    </CardDescription>
+                {/* Call to Action */}
+                <section className="mt-16 text-center">
+                  <div className="bg-gradient-card rounded-2xl p-8 border border-muted/50">
+                    <Lightbulb className="h-16 w-16 mx-auto mb-6 text-primary" />
+                    <h3 className="text-2xl font-bold text-foreground mb-4">
+                      ¿Listo para poner en práctica lo aprendido?
+                    </h3>
+                    <p className="text-muted-foreground mb-8 text-lg max-w-2xl mx-auto">
+                      Usa nuestro builder interactivo para crear prompts personalizados basados en estas técnicas
+                    </p>
                     <Button 
                       onClick={() => navigate("/#builder")}
-                      className="bg-primary hover:bg-primary/90"
+                      size="lg"
+                      className="bg-primary hover:bg-primary/90 px-8 py-4 text-lg"
                     >
-                      Ir al Builder
-                      <ArrowRight className="ml-2 h-4 w-4" />
+                      Ir al Builder Interactivo
+                      <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
-                  </CardContent>
-                </Card>
-              </div>
+                  </div>
+                </section>
+              </article>
             </div>
           </div>
         </main>
