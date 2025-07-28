@@ -24,45 +24,27 @@ const GuideDetail = () => {
           title: "¿Qué es un prompt?",
           content: `Un prompt es una instrucción o consulta que das a un modelo de IA para obtener una respuesta específica. Es como una conversación dirigida donde tú estableces el contexto y la dirección.
 
-## Características de un buen prompt:
+Los prompts efectivos son fundamentales para aprovechar al máximo las capacidades de la inteligencia artificial. Piensa en ellos como las instrucciones que le das a un asistente muy inteligente pero que necesita orientación específica para entender exactamente qué necesitas.
 
-### 1. Claridad
-- Usa un lenguaje simple y directo
-- Evita ambigüedades
-- Sé específico en lo que pides
+La calidad de tu prompt determina directamente la calidad de la respuesta que obtienes. Un prompt bien estructurado puede ser la diferencia entre una respuesta genérica y una solución personalizada que realmente resuelva tu problema.
 
-### 2. Contexto
-- Proporciona información relevante de fondo
-- Establece el escenario o situación
-- Define el rol que debe asumir la IA
+**Características de un buen prompt:**
 
-### 3. Estructura
-- Organiza la información de manera lógica
-- Usa separadores y formato claro
-- Incluye ejemplos cuando sea necesario
+**Claridad absoluta:** Usa un lenguaje simple y directo. Evita ambigüedades y sé específico en lo que pides. La precisión en las palabras se traduce en precisión en las respuestas.
 
-### 4. Objetivo claro
-- Define exactamente qué quieres obtener
-- Especifica el formato de respuesta deseado
-- Establece límites o restricciones si es necesario`,
+**Contexto relevante:** Proporciona información de fondo necesaria. Establece el escenario o situación específica. Define claramente el rol que debe asumir la IA para adaptar su respuesta.
+
+**Estructura lógica:** Organiza la información de manera coherente. Usa separadores y formato claro que facilite la comprensión. Incluye ejemplos cuando sea necesario para clarificar expectativas.
+
+**Objetivo definido:** Especifica exactamente qué quieres obtener como resultado. Define el formato de respuesta deseado (lista, párrafo, tabla, etc.). Establece límites o restricciones cuando sea apropiado.`,
           examples: [
             {
-              title: "Prompt básico (mejorable)",
+              title: "Ejemplo de prompt básico (poco efectivo)",
               content: "Escribe sobre marketing"
             },
             {
-              title: "Prompt mejorado",
-              content: `Actúa como un experto en marketing digital. Explica las 5 estrategias más efectivas de marketing de contenidos para pequeñas empresas en 2024. 
-
-Formato: Lista numerada
-Audiencia: Emprendedores sin experiencia en marketing
-Longitud: 200-300 palabras por estrategia
-
-Para cada estrategia incluye:
-- Descripción clara
-- Beneficios principales
-- Pasos para implementar
-- Ejemplo práctico`
+              title: "Ejemplo de prompt optimizado",
+              content: "Actúa como un experto en marketing digital con 10 años de experiencia. Explica las 5 estrategias más efectivas de marketing de contenidos específicamente para pequeñas empresas en 2024, considerando presupuestos limitados y recursos humanos reducidos.\n\nFormato: Lista numerada con subsecciones\nAudiencia: Emprendedores sin experiencia previa en marketing\nLongitud: Entre 200-300 palabras por estrategia\n\nPara cada estrategia proporciona:\n• Descripción clara y práctica\n• Beneficios específicos cuantificables\n• Pasos concretos para implementar\n• Ejemplo real de aplicación\n• Herramientas gratuitas recomendadas\n• Métrica clave para medir éxito"
             }
           ]
         },

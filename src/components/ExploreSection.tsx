@@ -425,24 +425,40 @@ Organiza todo en formato fácil de seguir con mapas sugeridos y enlaces útiles.
                     <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-muted/80 to-transparent"></div>
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex space-x-2">
-                    <Button 
-                      onClick={() => copyPrompt(promptItem.prompt, promptItem.title)}
-                      className="flex-1 bg-primary hover:bg-primary/90"
-                      size="sm"
-                    >
-                      <Copy className="h-4 w-4 mr-2" />
-                      Copiar
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="hover:bg-primary/10"
-                    >
-                      Compartir
-                    </Button>
-                  </div>
+                   {/* Action Buttons */}
+                   <div className="flex space-x-2">
+                     <Button 
+                       onClick={() => copyPrompt(promptItem.prompt, promptItem.title)}
+                       className="flex-1 bg-primary hover:bg-primary/90"
+                       size="sm"
+                     >
+                       <Copy className="h-4 w-4 mr-2" />
+                       Copiar
+                     </Button>
+                     <Button 
+                       variant="outline" 
+                       size="sm"
+                       className="hover:bg-primary/10"
+                       onClick={() => {
+                         const shareText = `Descubre este prompt útil: "${promptItem.title}"\n\n${promptItem.description}`;
+                         if (navigator.share) {
+                           navigator.share({
+                             title: promptItem.title,
+                             text: shareText,
+                             url: window.location.href
+                           });
+                         } else {
+                           navigator.clipboard.writeText(shareText);
+                           toast({
+                             title: "¡Enlace copiado!",
+                             description: "Compartir prompt copiado al portapapeles"
+                           });
+                         }
+                       }}
+                     >
+                       Compartir
+                     </Button>
+                   </div>
                 </div>
               </CardContent>
             </Card>
@@ -461,6 +477,42 @@ Organiza todo en formato fácil de seguir con mapas sugeridos y enlaces útiles.
             </p>
           </div>
         )}
+
+        {/* Add Prompt Section for Registered Users */}
+        <div className="mt-16 text-center animate-fade-in">
+          <Card className="max-w-2xl mx-auto shadow-elegant bg-gradient-card">
+            <CardContent className="p-8">
+              <div className="mb-6">
+                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">✨</span>
+                </div>
+                <h3 className="text-2xl font-bold text-foreground mb-4">
+                  ¿Tienes un prompt genial?
+                </h3>
+                <p className="text-muted-foreground mb-6">
+                  Comparte tus mejores prompts con la comunidad. Después de registrarte, 
+                  podrás contribuir y ayudar a otros usuarios a mejorar sus resultados.
+                </p>
+              </div>
+              
+              <div className="space-y-4">
+                <Button 
+                  size="lg" 
+                  className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
+                  onClick={() => {
+                    // Scroll to header to open auth dialog
+                    document.querySelector('header')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  Registrarme para Contribuir
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Los usuarios registrados pueden añadir prompts, valorar contenido y guardar favoritos
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </section>
   );
