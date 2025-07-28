@@ -5,7 +5,6 @@ import GuideSection from "@/components/GuideSection";
 import PromptBuilder from "@/components/PromptBuilder";
 import ExploreSection from "@/components/ExploreSection";
 import ResourcesSection from "@/components/ResourcesSection";
-import CommunitySection from "@/components/CommunitySection";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -19,7 +18,6 @@ const Index = () => {
           <PromptBuilder />
           <ExploreSection />
           <ResourcesSection />
-          <CommunitySection />
         </main>
         <Footer />
       </div>

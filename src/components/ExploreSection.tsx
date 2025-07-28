@@ -440,7 +440,7 @@ Organiza todo en formato fácil de seguir con mapas sugeridos y enlaces útiles.
                       size="sm"
                       className="hover:bg-primary/10"
                     >
-                      Ver completo
+                      Compartir
                     </Button>
                   </div>
                 </div>

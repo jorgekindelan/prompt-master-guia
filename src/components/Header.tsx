@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Moon, Sun, Brain } from "lucide-react";
+import { Menu, X, Moon, Sun, Brain, User } from "lucide-react";
 import { useTheme } from "next-themes";
+import AuthDialog from "./auth/AuthDialog";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const { theme, setTheme } = useTheme();
 
   const menuItems = [
@@ -12,9 +15,13 @@ const Header = () => {
     { label: "Guía", href: "#guia" },
     { label: "Builder", href: "#builder" },
     { label: "Explorar", href: "#explorar" },
-    { label: "Recursos", href: "#recursos" },
-    { label: "Comunidad", href: "#comunidad" }
+    { label: "Recursos", href: "#recursos" }
   ];
+
+  const openAuth = (mode: "login" | "register") => {
+    setAuthMode(mode);
+    setIsAuthOpen(true);
+  };
 
   const scrollToSection = (href: string) => {
     const element = document.querySelector(href);
@@ -51,8 +58,16 @@ const Header = () => {
             ))}
           </nav>
 
-          {/* Theme Toggle & Mobile Menu */}
+          {/* Auth & Theme Toggle & Mobile Menu */}
           <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              onClick={() => openAuth("login")}
+              className="hidden md:flex items-center space-x-2 hover:bg-muted"
+            >
+              <User className="h-4 w-4" />
+              <span>Iniciar Sesión</span>
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -88,10 +103,22 @@ const Header = () => {
                   {item.label}
                 </button>
               ))}
+              <button
+                onClick={() => openAuth("login")}
+                className="text-left px-4 py-2 text-foreground hover:text-primary hover:bg-muted rounded-md transition-colors duration-200"
+              >
+                Iniciar Sesión
+              </button>
             </div>
           </nav>
         )}
       </div>
+
+      <AuthDialog 
+        isOpen={isAuthOpen} 
+        onClose={() => setIsAuthOpen(false)}
+        initialMode={authMode}
+      />
     </header>
   );
 };

@@ -49,7 +49,7 @@ const HeroSection = () => {
             <Button 
               size="lg" 
               variant="outline" 
-              className="border-white/30 text-white hover:bg-white/10 px-8 py-6 text-lg animate-scale-in delay-200"
+              className="border-white/30 text-white hover:bg-white/10 hover:text-white px-8 py-6 text-lg animate-scale-in delay-200"
               onClick={() => document.querySelector('#builder')?.scrollIntoView({ behavior: 'smooth' })}
             >
               Crear Prompt
