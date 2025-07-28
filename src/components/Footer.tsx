@@ -43,7 +43,7 @@ const Footer = () => {
             <div className="flex items-center space-x-2 mb-4">
               <Brain className="h-8 w-8 text-primary" />
               <span className="text-xl font-bold text-foreground">
-                Prompt<span className="text-primary">Guide</span>
+                IA <span className="text-primary">Transformers</span>
               </span>
             </div>
             <p className="text-muted-foreground text-sm leading-relaxed mb-6">
