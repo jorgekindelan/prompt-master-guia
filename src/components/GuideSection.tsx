@@ -138,11 +138,11 @@ const GuideSection = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-            Guía Completa de <span className="text-primary">Prompting</span>
+            Guía Completa de <span className="text-primary">IA</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Desde los fundamentos básicos hasta técnicas avanzadas. 
-            Todo lo que necesitas para convertirte en un experto en prompting.
+            Desde los fundamentos básicos hasta técnicas avanzadas de modelos transformer. 
+            Todo lo que necesitas para convertirte en un experto en inteligencia artificial.
           </p>
         </div>
 

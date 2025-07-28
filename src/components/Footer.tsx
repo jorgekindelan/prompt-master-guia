@@ -8,7 +8,7 @@ const Footer = () => {
 
   const footerLinks = {
     producto: [
-      { label: "Guía de Prompting", href: "#guia" },
+      { label: "Guía de IA", href: "#guia" },
       { label: "Builder Interactivo", href: "#builder" },
       { label: "Explorar Prompts", href: "#explorar" },
       { label: "Recursos", href: "#recursos" }
@@ -27,7 +27,7 @@ const Footer = () => {
     ],
     soporte: [
       { label: "Centro de Ayuda", href: "#" },
-      { label: "Contacto", href: "mailto:info@promptguide.com" },
+      { label: "Contacto", href: "mailto:info@iatransformers.com" },
       { label: "Reportar Bug", href: "#" },
       { label: "Sugerencias", href: "#comunidad" }
     ]
@@ -47,7 +47,7 @@ const Footer = () => {
               </span>
             </div>
             <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-              La guía más completa para dominar el arte del prompting. 
+              El playground más avanzado para experimentar con modelos de IA transformer. 
               Aprende, practica y comparte con una comunidad activa.
             </p>
             
@@ -174,7 +174,7 @@ const Footer = () => {
         {/* Bottom Section */}
         <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-border">
           <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6 text-sm text-muted-foreground">
-            <p>© 2024 PromptGuide. Todos los derechos reservados.</p>
+            <p>© 2024 IA Transformers Playground. Todos los derechos reservados.</p>
             <div className="flex space-x-4">
               <a href="#" className="hover:text-primary transition-colors">Privacidad</a>
               <a href="#" className="hover:text-primary transition-colors">Términos</a>

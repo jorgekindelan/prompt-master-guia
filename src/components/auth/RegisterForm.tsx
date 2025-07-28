@@ -76,7 +76,7 @@ const RegisterForm = ({ onSwitchToLogin, onClose }: RegisterFormProps) => {
         <div>
           <CardTitle className="text-2xl">Crear Cuenta</CardTitle>
           <CardDescription>
-            Únete a la comunidad de PromptGuide
+            Únete a la comunidad de IA Transformers Playground
           </CardDescription>
         </div>
       </CardHeader>

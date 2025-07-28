@@ -83,7 +83,7 @@ const ResourcesSection = () => {
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Descubre las mejores herramientas, plataformas y recursos para potenciar 
-            tus habilidades de prompting y mantenerte actualizado.
+            tus habilidades con modelos de IA y mantenerte actualizado.
           </p>
         </div>
 

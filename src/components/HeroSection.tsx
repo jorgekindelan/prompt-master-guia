@@ -26,13 +26,13 @@ const HeroSection = () => {
         {/* Main Hero Content */}
         <div className="max-w-4xl mx-auto animate-fade-in">
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-            Domina el Arte del
-            <span className="text-primary block mt-2">Prompting</span>
+            IA Transformers
+            <span className="text-primary block mt-2">Playground</span>
           </h1>
           
           <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Aprende a comunicarte eficazmente con modelos de IA y obtén resultados profesionales 
-            con técnicas probadas y plantillas prácticas.
+            Experimenta con modelos de IA transformer de última generación y obtén resultados profesionales 
+            con técnicas avanzadas y herramientas interactivas.
           </p>
 
           {/* CTA Buttons */}
