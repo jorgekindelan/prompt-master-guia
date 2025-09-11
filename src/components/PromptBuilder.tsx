@@ -284,7 +284,7 @@ const PromptBuilder = () => {
                 <div className="mx-auto mb-6 p-6 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl w-24 h-24 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                   <Zap className="h-12 w-12 text-primary" />
                 </div>
-                <CardTitle className="text-3xl mb-3 font-bold">Modo Normal</CardTitle>
+                <CardTitle className="text-3xl mb-3 font-bold">Prompt Sencillo</CardTitle>
                 <CardDescription className="text-base text-muted-foreground">
                   Flujo rápido y eficiente con opciones clave preestablecidas. Perfecto para crear prompts profesionales en minutos.
                 </CardDescription>
@@ -298,7 +298,7 @@ const PromptBuilder = () => {
                 </ul>
                 <Button size="lg" className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 group-hover:shadow-lg transition-all duration-300">
                   <Play className="h-5 w-5 mr-2" />
-                  Comenzar Modo Normal
+                  Comenzar Prompt Sencillo
                 </Button>
               </CardContent>
             </Card>
@@ -310,7 +310,7 @@ const PromptBuilder = () => {
                 <div className="mx-auto mb-6 p-6 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl w-24 h-24 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                   <Settings className="h-12 w-12 text-primary" />
                 </div>
-                <CardTitle className="text-3xl mb-3 font-bold">Modo Avanzado</CardTitle>
+                <CardTitle className="text-3xl mb-3 font-bold">Prompt Avanzado</CardTitle>
                 <CardDescription className="text-base text-muted-foreground">
                   Control total y máxima personalización. Para usuarios experimentados que buscan resultados específicos.
                 </CardDescription>
@@ -324,7 +324,7 @@ const PromptBuilder = () => {
                 </ul>
                 <Button size="lg" variant="outline" className="w-full border-2 hover:bg-primary hover:text-primary-foreground group-hover:shadow-lg transition-all duration-300">
                   <Settings2 className="h-5 w-5 mr-2" />
-                  Comenzar Modo Avanzado
+                  Comenzar Prompt Avanzado
                 </Button>
               </CardContent>
             </Card>
@@ -348,7 +348,7 @@ const PromptBuilder = () => {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                {mode === 'normal' ? 'Prompt Builder Normal' : 'Prompt Builder Avanzado'}
+                {mode === 'normal' ? 'Prompt Sencillo' : 'Prompt Avanzado'}
               </h2>
               <p className="text-muted-foreground mt-2">
                 {mode === 'normal' 
