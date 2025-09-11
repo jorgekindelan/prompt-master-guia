@@ -24,6 +24,111 @@ const GuideSection = () => {
 
   const guideCategories = [
     {
+      id: "pilares",
+      title: "Los 7 Pilares del Prompt Engineering",
+      icon: Brain,
+      color: "bg-red-500",
+      description: "Domina los elementos fundamentales para crear prompts magistrales y obtener resultados extraordinarios",
+      items: [
+        {
+          id: "pilar-rol",
+          title: "1. Rol - Quién debe ser la IA",
+          content: "El primer paso para enfocar la respuesta de la IA es decirle quién debe ser. Al asignar un rol específico, se le indica al modelo que adopte los patrones de lenguaje, vocabulario y conocimientos asociados con esa profesión, convirtiendo a la IA de generalista en especialista.",
+          example: `Actúa como un experto en marketing digital con 10 años de experiencia en e-commerce.
+
+Eres un nutricionista clínico especializado en deportes de alto rendimiento.
+
+Asume el papel de un guionista de cine con experiencia en thrillers psicológicos.
+
+Compórtate como un profesor universitario explicando a estudiantes de primer año.`
+        },
+        {
+          id: "pilar-contexto",
+          title: "2. Contexto - Dónde está y por qué",
+          content: "El contexto proporciona toda la información de fondo que la IA necesita para comprender el propósito real de la solicitud. Sin contexto claro, la IA hace suposiciones incorrectas o demasiado genéricas.",
+          example: `Mi empresa 'EcoSabor' va a lanzar un nuevo producto: snacks orgánicos para oficinas. 
+Nuestros valores se centran en sostenibilidad y salud. 
+El objetivo es convencer a inversores en una presentación de 10 minutos.
+Nuestro presupuesto de marketing es de 50,000€ para los primeros 6 meses.
+
+Este email es para clientes que ya compraron nuestro producto anterior y mostraron interés en versiones premium.`
+        },
+        {
+          id: "pilar-tarea",
+          title: "3. Tarea - La acción específica",
+          content: "La tarea es el corazón del prompt: la acción principal que debe realizar la IA. Debe definirse de forma clara, concisa e inequívoca usando verbos de acción fuertes y especificando el entregable exacto.",
+          example: `Analiza la sección de 'Estrategia de Mercado' del plan de negocio adjunto e identifica tres posibles debilidades. Para cada debilidad, sugiere una acción correctiva concreta.
+
+Crea una lista con viñetas de 10 títulos llamativos para artículos de blog sobre inteligencia artificial.
+
+Redacta un borrador de email de bienvenida de máximo 150 palabras para nuevos suscriptores.
+
+Compara y contrasta las ventajas y desventajas de React vs Vue.js en formato tabla.`
+        },
+        {
+          id: "pilar-audiencia",
+          title: "4. Audiencia - Para quién es la respuesta",
+          content: "Especificar la audiencia objetivo influye directamente en el tono, complejidad del vocabulario y nivel de detalle. Es crucial adaptar la comunicación según quién recibirá el mensaje final.",
+          example: `Para jóvenes profesionales urbanos de 25-40 años interesados en tecnología y sostenibilidad.
+
+Explica este concepto a un niño de 10 años usando analogías simples y divertidas.
+
+Dirigido a un comité de inversores con experiencia en startups tecnológicas.
+
+Para desarrolladores senior sin conocimientos previos de machine learning.
+
+Audiencia: clientes leales de nuestra marca que valoran la calidad premium.`
+        },
+        {
+          id: "pilar-formato",
+          title: "5. Formato de Salida - Cómo estructurar la respuesta",
+          content: "Por defecto, la IA responde en párrafos conversacionales, pero en la mayoría de casos prácticos necesitas la información en una estructura específica. Indica explícitamente el formato deseado.",
+          example: `Formato: Una tabla con tres columnas (Problema, Causa, Solución).
+
+Estructura la respuesta como una lista numerada con exactamente 5 puntos.
+
+Responde en formato JSON válido con las claves: "titulo", "descripcion", "precio".
+
+Crea un borrador de correo electrónico con asunto y cuerpo claramente separados.
+
+Formato: Código Python con comentarios explicativos para cada función.`
+        },
+        {
+          id: "pilar-ejemplos",
+          title: "6. Ejemplos - Mostrar el patrón deseado",
+          content: "Una de las técnicas más poderosas es incluir ejemplos del resultado exacto que esperas. Esta técnica (few-shot prompting) le muestra al modelo el patrón exacto que debe seguir, reduciendo drásticamente malentendidos.",
+          example: `Clasifica el sentimiento de estos textos:
+
+Ejemplo 1: "Me encantó este producto, superó mis expectativas" → Positivo
+Ejemplo 2: "El servicio fue terrible, muy decepcionante" → Negativo
+Ejemplo 3: "Está bien, cumple su función" → Neutral
+
+Ahora clasifica: "La experiencia fue increíble, lo recomiendo totalmente"
+
+---
+
+Escribe con este estilo: "El cosmos susurra secretos ancestrales mientras las estrellas danzan en el teatro infinito de la noche."
+Ahora describe el amanecer usando el mismo estilo poético.`
+        },
+        {
+          id: "pilar-restricciones",
+          title: "7. Restricciones - Los límites a respetar",
+          content: "Las restricciones son las 'barandillas' que mantienen la respuesta en el camino correcto. Incluyen limitaciones de longitud, tono, contenido y comportamiento que evitan respuestas fuera de los límites del proyecto.",
+          example: `RESTRICCIONES:
+- No excedas las 200 palabras
+- Usa un tono profesional pero cercano
+- No menciones a empresas competidoras
+- Incluye exactamente 3 beneficios clave
+- Si no conoces la respuesta, indica "No tengo información suficiente" en lugar de inventar
+
+RESTRICCIONES TÉCNICAS:
+- El código debe ser compatible con Python 3.9+
+- Usa solo librerías estándar, sin dependencias externas
+- Incluye manejo de errores para cada función`
+        }
+      ]
+    },
+    {
       id: "fundamentos",
       title: "Fundamentos del Prompting",
       icon: BookOpen,
@@ -141,8 +246,7 @@ const GuideSection = () => {
             Guía Completa de <span className="text-primary">IA</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Desde los fundamentos básicos hasta técnicas avanzadas de modelos transformer. 
-            Todo lo que necesitas para convertirte en un experto en inteligencia artificial.
+            Aprende los 7 pilares fundamentales del prompt engineering y técnicas avanzadas para crear prompts magistrales que generen resultados extraordinarios con cualquier modelo de IA.
           </p>
         </div>
 
