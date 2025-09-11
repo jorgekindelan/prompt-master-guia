@@ -4,353 +4,490 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Wand2, RefreshCw, Settings } from "lucide-react";
+import { Copy, Wand2, RefreshCw, Settings, ChevronLeft, ChevronRight, Play, User, FileText, Target, Users, Layout, BookOpen, Shield, Code, FileCode, Settings2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+type Mode = 'initial' | 'simplified' | 'advanced';
+type Step = 'role' | 'context' | 'task' | 'audience' | 'format' | 'examples' | 'restrictions';
+type OutputFormat = 'text' | 'html' | 'json';
+
+interface PromptData {
+  role: string;
+  context: string;
+  task: string;
+  audience: string;
+  format: string;
+  examples: string;
+  restrictions: string;
+}
 
 const PromptBuilder = () => {
   const { toast } = useToast();
-  const [selectedGoal, setSelectedGoal] = useState<string>("");
-  const [selectedDetail, setSelectedDetail] = useState<string>("");
-  const [selectedStyle, setSelectedStyle] = useState<string>("");
-  const [selectedFormat, setSelectedFormat] = useState<string>("");
-  const [customContext, setCustomContext] = useState<string>("");
+  
+  // Main state
+  const [mode, setMode] = useState<Mode>('initial');
+  const [currentStep, setCurrentStep] = useState<Step>('role');
+  const [outputFormat, setOutputFormat] = useState<OutputFormat>('text');
   const [generatedPrompt, setGeneratedPrompt] = useState<string>("");
+  
+  // Prompt data
+  const [promptData, setPromptData] = useState<PromptData>({
+    role: '',
+    context: '',
+    task: '',
+    audience: '',
+    format: '',
+    examples: '',
+    restrictions: ''
+  });
 
-  const goals = [
-    { value: "escribir", label: "Escribir contenido", template: "Redacta un [tipo de contenido] sobre [tema]" },
-    { value: "analizar", label: "Analizar información", template: "Analiza [datos/información] y proporciona" },
-    { value: "traducir", label: "Traducir texto", template: "Traduce el siguiente texto de [idioma origen] a [idioma destino]" },
-    { value: "resumir", label: "Resumir contenido", template: "Resume el siguiente contenido en [formato]" },
-    { value: "codigo", label: "Generar código", template: "Crea una función en [lenguaje] que [funcionalidad]" },
-    { value: "planificar", label: "Crear plan", template: "Desarrolla un plan detallado para [objetivo]" },
-    { value: "creatividad", label: "Brainstorming creativo", template: "Genera ideas creativas para [proyecto/problema]" },
-    { value: "educacion", label: "Explicar conceptos", template: "Explica [concepto] de manera [nivel de dificultad]" }
+  // Steps configuration
+  const steps: { key: Step; title: string; icon: any; required: boolean }[] = [
+    { key: 'role', title: 'Rol', icon: User, required: true },
+    { key: 'context', title: 'Contexto', icon: FileText, required: true },
+    { key: 'task', title: 'Tarea', icon: Target, required: true },
+    { key: 'audience', title: 'Audiencia', icon: Users, required: false },
+    { key: 'format', title: 'Formato', icon: Layout, required: false },
+    { key: 'examples', title: 'Ejemplos', icon: BookOpen, required: false },
+    { key: 'restrictions', title: 'Restricciones', icon: Shield, required: false }
   ];
 
-  const detailLevels = [
-    { value: "basico", label: "Básico", description: "Respuesta simple y directa" },
-    { value: "intermedio", label: "Intermedio", description: "Respuesta detallada con ejemplos" },
-    { value: "avanzado", label: "Avanzado", description: "Análisis profundo y completo" },
-    { value: "experto", label: "Nivel experto", description: "Perspectiva técnica y especializada" }
-  ];
+  // Options for simplified mode
+  const simplifiedOptions = {
+    role: [
+      'Experto en marketing digital',
+      'Escritor profesional',
+      'Consultor de negocios',
+      'Profesor universitario',
+      'Analista de datos'
+    ],
+    context: [
+      'Para una empresa startup tecnológica',
+      'Para un blog personal',
+      'Para una presentación corporativa',
+      'Para contenido educativo',
+      'Para redes sociales'
+    ],
+    task: [
+      'Crear contenido informativo',
+      'Analizar datos o información',
+      'Generar ideas creativas',
+      'Explicar conceptos complejos',
+      'Resolver un problema específico'
+    ],
+    audience: [
+      'Profesionales del sector',
+      'Público general',
+      'Estudiantes',
+      'Clientes potenciales',
+      'Equipo interno'
+    ],
+    format: [
+      'Lista numerada',
+      'Párrafos estructurados',
+      'Puntos clave',
+      'Guía paso a paso',
+      'Informe detallado'
+    ]
+  };
 
-  const styles = [
-    { value: "profesional", label: "Profesional", description: "Formal y objetivo" },
-    { value: "conversacional", label: "Conversacional", description: "Cercano y amigable" },
-    { value: "academico", label: "Académico", description: "Riguroso y documentado" },
-    { value: "creativo", label: "Creativo", description: "Original y expresivo" },
-    { value: "persuasivo", label: "Persuasivo", description: "Convincente y motivador" },
-    { value: "tecnico", label: "Técnico", description: "Preciso y especializado" }
-  ];
+  const updatePromptData = (key: keyof PromptData, value: string) => {
+    setPromptData(prev => ({ ...prev, [key]: value }));
+  };
 
-  const formats = [
-    { value: "lista", label: "Lista numerada", example: "1. Punto uno\n2. Punto dos..." },
-    { value: "parrafos", label: "Párrafos", example: "Texto estructurado en párrafos..." },
-    { value: "tabla", label: "Tabla", example: "| Columna 1 | Columna 2 |..." },
-    { value: "puntos", label: "Viñetas", example: "• Punto importante\n• Otro punto..." },
-    { value: "pasos", label: "Paso a paso", example: "Paso 1: Acción inicial..." },
-    { value: "codigo", label: "Bloque de código", example: "```javascript\n// código aquí\n```" }
-  ];
+  const nextStep = () => {
+    const currentIndex = steps.findIndex(step => step.key === currentStep);
+    if (currentIndex < steps.length - 1) {
+      setCurrentStep(steps[currentIndex + 1].key);
+    } else {
+      generatePrompt();
+    }
+  };
+
+  const prevStep = () => {
+    const currentIndex = steps.findIndex(step => step.key === currentStep);
+    if (currentIndex > 0) {
+      setCurrentStep(steps[currentIndex - 1].key);
+    }
+  };
+
+  const canProceed = () => {
+    const currentStepData = steps.find(step => step.key === currentStep);
+    if (!currentStepData?.required) return true;
+    return promptData[currentStep].trim().length > 0;
+  };
 
   const generatePrompt = () => {
-    if (!selectedGoal || !selectedDetail || !selectedStyle || !selectedFormat) {
-      toast({
-        title: "Campos incompletos",
-        description: "Por favor, completa todos los campos para generar el prompt.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const goalTemplate = goals.find(g => g.value === selectedGoal)?.template || "";
-    const detailLabel = detailLevels.find(d => d.value === selectedDetail)?.label || "";
-    const styleLabel = styles.find(s => s.value === selectedStyle)?.label || "";
-    const formatLabel = formats.find(f => f.value === selectedFormat)?.label || "";
-
-    let prompt = `Actúa como un experto y ${goalTemplate}.\n\n`;
+    let prompt = '';
     
-    if (customContext.trim()) {
-      prompt += `Contexto específico: ${customContext}\n\n`;
+    if (promptData.role) {
+      prompt += `Actúa como ${promptData.role}.\n\n`;
     }
     
-    prompt += `Instrucciones:\n`;
-    prompt += `- Nivel de detalle: ${detailLabel}\n`;
-    prompt += `- Estilo de comunicación: ${styleLabel}\n`;
-    prompt += `- Formato de respuesta: ${formatLabel}\n\n`;
+    if (promptData.context) {
+      prompt += `Contexto: ${promptData.context}\n\n`;
+    }
     
-    switch (selectedGoal) {
-      case "escribir":
-        prompt += `Asegúrate de que el contenido sea original, bien estructurado y apropiado para la audiencia objetivo.`;
-        break;
-      case "analizar":
-        prompt += `Proporciona un análisis objetivo, identifica patrones clave y ofrece conclusiones fundamentadas.`;
-        break;
-      case "traducir":
-        prompt += `Mantén el tono y contexto originales, adaptando expresiones idiomáticas cuando sea necesario.`;
-        break;
-      case "resumir":
-        prompt += `Captura los puntos más importantes sin perder el mensaje central del contenido original.`;
-        break;
-      case "codigo":
-        prompt += `Incluye comentarios explicativos, manejo de errores básico y sigue las mejores prácticas del lenguaje.`;
-        break;
-      case "planificar":
-        prompt += `Crea un plan realista con pasos claros, plazos sugeridos y consideraciones importantes.`;
-        break;
-      case "creatividad":
-        prompt += `Piensa fuera de lo convencional, proporciona ideas variadas y considera diferentes perspectivas.`;
-        break;
-      case "educacion":
-        prompt += `Usa analogías apropiadas, ejemplos prácticos y estructura la información de manera pedagógica.`;
-        break;
+    if (promptData.task) {
+      prompt += `Tarea: ${promptData.task}\n\n`;
+    }
+    
+    if (promptData.audience) {
+      prompt += `Audiencia objetivo: ${promptData.audience}\n\n`;
+    }
+    
+    if (promptData.format) {
+      prompt += `Formato de respuesta: ${promptData.format}\n\n`;
+    }
+    
+    if (promptData.examples) {
+      prompt += `Ejemplos de referencia: ${promptData.examples}\n\n`;
+    }
+    
+    if (promptData.restrictions) {
+      prompt += `Restricciones: ${promptData.restrictions}\n\n`;
     }
 
-    setGeneratedPrompt(prompt);
+    setGeneratedPrompt(prompt.trim());
+  };
+
+  const formatPromptOutput = () => {
+    if (!generatedPrompt) return '';
+    
+    switch (outputFormat) {
+      case 'html':
+        return generatedPrompt
+          .split('\n\n')
+          .map(paragraph => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`)
+          .join('\n');
+      
+      case 'json':
+        const sections = generatedPrompt.split('\n\n');
+        const jsonOutput = {
+          prompt: generatedPrompt,
+          sections: sections.map((section, index) => ({
+            id: index + 1,
+            content: section
+          })),
+          metadata: {
+            created: new Date().toISOString(),
+            mode: mode,
+            steps_completed: Object.values(promptData).filter(v => v.trim().length > 0).length
+          }
+        };
+        return JSON.stringify(jsonOutput, null, 2);
+      
+      default:
+        return generatedPrompt;
+    }
   };
 
   const copyPrompt = () => {
-    if (generatedPrompt) {
-      navigator.clipboard.writeText(generatedPrompt);
+    const output = formatPromptOutput();
+    if (output) {
+      navigator.clipboard.writeText(output);
       toast({
         title: "¡Prompt copiado!",
-        description: "El prompt ha sido copiado al portapapeles",
+        description: `Prompt copiado en formato ${outputFormat.toUpperCase()}`,
       });
     }
   };
 
   const resetBuilder = () => {
-    setSelectedGoal("");
-    setSelectedDetail("");
-    setSelectedStyle("");
-    setSelectedFormat("");
-    setCustomContext("");
-    setGeneratedPrompt("");
+    setMode('initial');
+    setCurrentStep('role');
+    setOutputFormat('text');
+    setGeneratedPrompt('');
+    setPromptData({
+      role: '',
+      context: '',
+      task: '',
+      audience: '',
+      format: '',
+      examples: '',
+      restrictions: ''
+    });
   };
+
+  // Initial screen
+  if (mode === 'initial') {
+    return (
+      <section id="builder" className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16 animate-fade-in">
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+              Prompt Builder <span className="text-primary">Interactivo</span>
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-12">
+              Crea prompts personalizados paso a paso siguiendo los 7 pilares del prompt engineering.
+              Elige tu modo preferido para comenzar.
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="shadow-card-custom hover:shadow-lg transition-all duration-300 cursor-pointer group animate-slide-up" 
+                  onClick={() => setMode('simplified')}>
+              <CardHeader className="text-center pb-4">
+                <div className="mx-auto mb-4 p-4 bg-primary/10 rounded-full w-20 h-20 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <Settings2 className="h-10 w-10 text-primary" />
+                </div>
+                <CardTitle className="text-2xl mb-2">Modo Simplificado</CardTitle>
+                <CardDescription>
+                  Flujo guiado con opciones preestablecidas. Perfecto para comenzar rápidamente.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li>✓ Opciones predefinidas</li>
+                  <li>✓ Proceso más rápido</li>
+                  <li>✓ Ideal para principiantes</li>
+                  <li>✓ Navegación simple</li>
+                </ul>
+                <Button className="w-full mt-6 group-hover:bg-primary/90">
+                  <Play className="h-4 w-4 mr-2" />
+                  Empezar Modo Simplificado
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card-custom hover:shadow-lg transition-all duration-300 cursor-pointer group animate-slide-up delay-200" 
+                  onClick={() => setMode('advanced')}>
+              <CardHeader className="text-center pb-4">
+                <div className="mx-auto mb-4 p-4 bg-primary/10 rounded-full w-20 h-20 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <Settings className="h-10 w-10 text-primary" />
+                </div>
+                <CardTitle className="text-2xl mb-2">Modo Avanzado</CardTitle>
+                <CardDescription>
+                  Mayor personalización y flexibilidad. Control total sobre cada elemento del prompt.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li>✓ Personalización completa</li>
+                  <li>✓ Máxima flexibilidad</li>
+                  <li>✓ Para usuarios experimentados</li>
+                  <li>✓ Control detallado</li>
+                </ul>
+                <Button className="w-full mt-6 group-hover:bg-primary/90">
+                  <Play className="h-4 w-4 mr-2" />
+                  Empezar Modo Avanzado
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Step-by-step wizard
+  const currentStepIndex = steps.findIndex(step => step.key === currentStep);
+  const currentStepData = steps[currentStepIndex];
+  const Icon = currentStepData.icon;
 
   return (
     <section id="builder" className="py-20 bg-muted/30">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16 animate-fade-in">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-            Prompt Builder <span className="text-primary">Interactivo</span>
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Crea prompts personalizados paso a paso. Selecciona las opciones que mejor se adapten 
-            a tu objetivo y obtén un prompt optimizado al instante.
-          </p>
+        {/* Progress bar */}
+        <div className="max-w-4xl mx-auto mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-foreground">
+              Creando tu Prompt - {mode === 'simplified' ? 'Modo Simplificado' : 'Modo Avanzado'}
+            </h2>
+            <Button variant="outline" size="sm" onClick={resetBuilder}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Reiniciar
+            </Button>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            {steps.map((step, index) => (
+              <div key={step.key} className="flex items-center flex-1">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                  index <= currentStepIndex 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'bg-muted text-muted-foreground'
+                }`}>
+                  {index + 1}
+                </div>
+                {index < steps.length - 1 && (
+                  <div className={`flex-1 h-0.5 mx-2 transition-colors ${
+                    index < currentStepIndex ? 'bg-primary' : 'bg-muted'
+                  }`} />
+                )}
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Builder Form */}
-            <Card className="shadow-card-custom animate-slide-up">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Settings className="h-6 w-6 text-primary" />
-                  <span>Configurador de Prompt</span>
-                </CardTitle>
-                <CardDescription>
-                  Completa los campos para generar tu prompt personalizado
-                </CardDescription>
-              </CardHeader>
-              
-              <CardContent className="space-y-6">
-                {/* Goal Selection */}
-                <div className="space-y-2">
+        <div className="max-w-4xl mx-auto">
+          <Card className="shadow-card-custom">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-3">
+                <Icon className="h-6 w-6 text-primary" />
+                <span>Paso {currentStepIndex + 1}: {currentStepData.title}</span>
+                {currentStepData.required && (
+                  <Badge variant="destructive" className="text-xs">Obligatorio</Badge>
+                )}
+              </CardTitle>
+              <CardDescription>
+                {getStepDescription(currentStep)}
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent className="space-y-6">
+              {mode === 'simplified' && simplifiedOptions[currentStep as keyof typeof simplifiedOptions] ? (
+                <div className="space-y-3">
                   <label className="text-sm font-medium text-foreground">
-                    ¿Cuál es tu objetivo? *
+                    Selecciona una opción:
                   </label>
-                  <Select value={selectedGoal} onValueChange={setSelectedGoal}>
+                  <Select 
+                    value={promptData[currentStep]} 
+                    onValueChange={(value) => updatePromptData(currentStep, value)}
+                  >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecciona lo que quieres hacer" />
+                      <SelectValue placeholder={`Elige ${currentStepData.title.toLowerCase()}`} />
                     </SelectTrigger>
                     <SelectContent>
-                      {goals.map((goal) => (
-                        <SelectItem key={goal.value} value={goal.value}>
-                          {goal.label}
+                      {simplifiedOptions[currentStep as keyof typeof simplifiedOptions]?.map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-
-                {/* Detail Level */}
-                <div className="space-y-2">
+              ) : (
+                <div className="space-y-3">
                   <label className="text-sm font-medium text-foreground">
-                    Nivel de detalle *
-                  </label>
-                  <Select value={selectedDetail} onValueChange={setSelectedDetail}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona el nivel de profundidad" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {detailLevels.map((level) => (
-                        <SelectItem key={level.value} value={level.value}>
-                          <div>
-                            <div className="font-medium">{level.label}</div>
-                            <div className="text-xs text-muted-foreground">{level.description}</div>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Style Selection */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
-                    Estilo de comunicación *
-                  </label>
-                  <Select value={selectedStyle} onValueChange={setSelectedStyle}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Elige el tono y estilo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {styles.map((style) => (
-                        <SelectItem key={style.value} value={style.value}>
-                          <div>
-                            <div className="font-medium">{style.label}</div>
-                            <div className="text-xs text-muted-foreground">{style.description}</div>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Format Selection */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
-                    Formato de respuesta *
-                  </label>
-                  <Select value={selectedFormat} onValueChange={setSelectedFormat}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="¿Cómo quieres la respuesta?" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {formats.map((format) => (
-                        <SelectItem key={format.value} value={format.value}>
-                          <div>
-                            <div className="font-medium">{format.label}</div>
-                            <div className="text-xs text-muted-foreground">{format.example}</div>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Custom Context */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
-                    Contexto específico (opcional)
+                    Describe tu {currentStepData.title.toLowerCase()}:
                   </label>
                   <Textarea
-                    placeholder="Añade información específica sobre tu caso de uso, audiencia objetivo, restricciones especiales, etc."
-                    value={customContext}
-                    onChange={(e) => setCustomContext(e.target.value)}
-                    className="min-h-[80px] resize-none"
+                    placeholder={getStepPlaceholder(currentStep)}
+                    value={promptData[currentStep]}
+                    onChange={(e) => updatePromptData(currentStep, e.target.value)}
+                    className="min-h-[100px] resize-none"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Este contexto ayudará a personalizar aún más tu prompt
-                  </p>
                 </div>
+              )}
 
-                {/* Action Buttons */}
-                <div className="flex space-x-3 pt-4">
-                  <Button 
-                    onClick={generatePrompt}
-                    className="flex-1 bg-primary hover:bg-primary/90"
-                    disabled={!selectedGoal || !selectedDetail || !selectedStyle || !selectedFormat}
-                  >
-                    <Wand2 className="h-4 w-4 mr-2" />
-                    Generar Prompt
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    onClick={resetBuilder}
-                    className="px-4"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+              {/* Navigation buttons */}
+              <div className="flex justify-between pt-6">
+                <Button 
+                  variant="outline" 
+                  onClick={prevStep}
+                  disabled={currentStepIndex === 0}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-2" />
+                  Anterior
+                </Button>
+                
+                <Button 
+                  onClick={nextStep}
+                  disabled={!canProceed()}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  {currentStepIndex === steps.length - 1 ? (
+                    <>
+                      <Wand2 className="h-4 w-4 mr-2" />
+                      Generar Prompt
+                    </>
+                  ) : (
+                    <>
+                      Siguiente
+                      <ChevronRight className="h-4 w-4 ml-2" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Generated Prompt Display */}
-            <Card className="shadow-card-custom animate-slide-up delay-200">
+          {/* Generated prompt display */}
+          {generatedPrompt && (
+            <Card className="mt-8 shadow-card-custom animate-fade-in">
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Tu Prompt Generado</span>
-                  {generatedPrompt && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={copyPrompt}
-                      className="hover:bg-primary/10"
-                    >
+                <div className="flex items-center justify-between">
+                  <CardTitle>Tu Prompt Generado</CardTitle>
+                  <div className="flex items-center space-x-2">
+                    {/* Format toggle buttons */}
+                    <div className="flex bg-muted rounded-lg p-1">
+                      <Button
+                        variant={outputFormat === 'text' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setOutputFormat('text')}
+                        className="rounded-md text-xs"
+                      >
+                        Texto
+                      </Button>
+                      <Button
+                        variant={outputFormat === 'html' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setOutputFormat('html')}
+                        className="rounded-md text-xs"
+                      >
+                        <Code className="h-3 w-3 mr-1" />
+                        HTML
+                      </Button>
+                      <Button
+                        variant={outputFormat === 'json' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setOutputFormat('json')}
+                        className="rounded-md text-xs"
+                      >
+                        <FileCode className="h-3 w-3 mr-1" />
+                        JSON
+                      </Button>
+                    </div>
+                    
+                    <Button variant="outline" size="sm" onClick={copyPrompt}>
                       <Copy className="h-4 w-4 mr-2" />
                       Copiar
                     </Button>
-                  )}
-                </CardTitle>
-                <CardDescription>
-                  El prompt aparecerá aquí una vez que completes la configuración
-                </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
               
               <CardContent>
-                {generatedPrompt ? (
-                  <div className="space-y-4">
-                    {/* Selected Options Summary */}
-                    <div className="flex flex-wrap gap-2">
-                      {selectedGoal && (
-                        <Badge variant="secondary">
-                          {goals.find(g => g.value === selectedGoal)?.label}
-                        </Badge>
-                      )}
-                      {selectedDetail && (
-                        <Badge variant="secondary">
-                          {detailLevels.find(d => d.value === selectedDetail)?.label}
-                        </Badge>
-                      )}
-                      {selectedStyle && (
-                        <Badge variant="secondary">
-                          {styles.find(s => s.value === selectedStyle)?.label}
-                        </Badge>
-                      )}
-                      {selectedFormat && (
-                        <Badge variant="secondary">
-                          {formats.find(f => f.value === selectedFormat)?.label}
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Generated Prompt */}
-                    <div className="bg-muted/50 rounded-lg p-4 border-2 border-primary/20">
-                      <pre className="whitespace-pre-wrap text-sm font-mono text-foreground leading-relaxed">
-                        {generatedPrompt}
-                      </pre>
-                    </div>
-
-                    <div className="text-xs text-muted-foreground">
-                      💡 Consejo: Puedes personalizar este prompt según tus necesidades específicas
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Wand2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Completa la configuración para ver tu prompt personalizado</p>
-                  </div>
-                )}
+                <div className="bg-muted/50 rounded-lg p-4 border-2 border-primary/20">
+                  <pre className="whitespace-pre-wrap text-sm font-mono text-foreground leading-relaxed overflow-x-auto">
+                    {formatPromptOutput()}
+                  </pre>
+                </div>
               </CardContent>
             </Card>
-          </div>
+          )}
         </div>
       </div>
     </section>
   );
 };
+
+// Helper functions
+function getStepDescription(step: Step): string {
+  const descriptions = {
+    role: 'Define qué experto o personalidad debe adoptar la IA para responder',
+    context: 'Proporciona información de fondo y situación específica',
+    task: 'Especifica qué acción principal debe realizar la IA',
+    audience: 'Define para quién será la respuesta (opcional pero recomendado)',
+    format: 'Indica cómo quieres estructurar la respuesta',
+    examples: 'Proporciona ejemplos del tipo de respuesta que esperas',
+    restrictions: 'Establece límites y reglas que la IA debe seguir'
+  };
+  return descriptions[step];
+}
+
+function getStepPlaceholder(step: Step): string {
+  const placeholders = {
+    role: 'Ej: Experto en marketing digital con 10 años de experiencia en e-commerce',
+    context: 'Ej: Mi empresa es una startup de tecnología que vende productos eco-friendly...',
+    task: 'Ej: Analiza la estrategia de contenidos y sugiere 5 mejoras específicas',
+    audience: 'Ej: Empresarios jóvenes de 25-40 años interesados en sostenibilidad',
+    format: 'Ej: Lista numerada con explicación de 2-3 líneas por punto',
+    examples: 'Ej: Como este estilo: "1. Optimización SEO - Mejora la visibilidad..."',
+    restrictions: 'Ej: No exceder 300 palabras, usar tono profesional pero cercano'
+  };
+  return placeholders[step];
+}
 
 export default PromptBuilder;
