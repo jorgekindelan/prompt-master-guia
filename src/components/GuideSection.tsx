@@ -185,82 +185,86 @@ const GuideSection = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+        <div className="space-y-8">
           {pilares.map((pilar, index) => (
             <Card key={pilar.id} className="shadow-card-custom hover:shadow-elegant transition-all duration-300 animate-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
-              <CardHeader>
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className={`p-3 rounded-lg ${pilar.color}`}>
-                    <pilar.icon className="h-6 w-6 text-white" />
+              <CardHeader className="pb-4">
+                <div className="flex items-start space-x-4">
+                  <div className={`p-4 rounded-xl ${pilar.color} flex-shrink-0`}>
+                    <pilar.icon className="h-8 w-8 text-white" />
                   </div>
-                  <div>
-                    <CardTitle className="text-xl">{pilar.title}</CardTitle>
-                    <CardDescription className="text-sm">{pilar.subtitle}</CardDescription>
+                  <div className="flex-grow">
+                    <CardTitle className="text-2xl mb-2">{pilar.title}</CardTitle>
+                    <CardDescription className="text-base mb-3">{pilar.subtitle}</CardDescription>
+                    <p className="text-muted-foreground leading-relaxed">{pilar.description}</p>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">{pilar.description}</p>
               </CardHeader>
               
               <CardContent>
                 <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="content">
-                    <AccordionTrigger className="text-left hover:text-primary">
-                      <div className="flex items-center space-x-2">
-                        <ChevronRight className="h-4 w-4" />
-                        <span>Explicación detallada</span>
+                  <AccordionItem value="content" className="border-b">
+                    <AccordionTrigger className="text-left hover:text-primary py-4">
+                      <div className="flex items-center space-x-3">
+                        <ChevronRight className="h-5 w-5" />
+                        <span className="font-semibold">Explicación detallada</span>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="space-y-4">
-                      <p className="text-muted-foreground leading-relaxed text-sm">
+                    <AccordionContent className="pb-6">
+                      <p className="text-muted-foreground leading-relaxed">
                         {pilar.content}
                       </p>
                     </AccordionContent>
                   </AccordionItem>
 
-                  <AccordionItem value="components">
-                    <AccordionTrigger className="text-left hover:text-primary">
-                      <div className="flex items-center space-x-2">
-                        <ChevronRight className="h-4 w-4" />
-                        <span>Componentes y variables</span>
+                  <AccordionItem value="components" className="border-b">
+                    <AccordionTrigger className="text-left hover:text-primary py-4">
+                      <div className="flex items-center space-x-3">
+                        <ChevronRight className="h-5 w-5" />
+                        <span className="font-semibold">Componentes y variables</span>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="space-y-3">
-                      {pilar.componentes.map((componente, idx) => (
-                        <div key={idx} className="bg-muted/30 rounded-lg p-3 border-l-4 border-primary/30">
-                          <p className="text-sm text-foreground">{componente}</p>
-                        </div>
-                      ))}
+                    <AccordionContent className="pb-6">
+                      <div className="grid gap-3">
+                        {pilar.componentes.map((componente, idx) => (
+                          <div key={idx} className="bg-muted/30 rounded-lg p-4 border-l-4 border-primary/50">
+                            <p className="text-foreground">{componente}</p>
+                          </div>
+                        ))}
+                      </div>
                     </AccordionContent>
                   </AccordionItem>
 
-                  <AccordionItem value="examples">
-                    <AccordionTrigger className="text-left hover:text-primary">
-                      <div className="flex items-center space-x-2">
-                        <ChevronRight className="h-4 w-4" />
-                        <span>Ejemplos prácticos</span>
+                  <AccordionItem value="examples" className="border-0">
+                    <AccordionTrigger className="text-left hover:text-primary py-4">
+                      <div className="flex items-center space-x-3">
+                        <ChevronRight className="h-5 w-5" />
+                        <span className="font-semibold">Ejemplos prácticos</span>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="space-y-4">
-                      {pilar.ejemplos.map((ejemplo, idx) => (
-                        <div key={idx} className="bg-muted/50 rounded-lg p-4 border-l-4 border-primary">
-                          <div className="flex items-center justify-between mb-2">
-                            <Badge variant="secondary" className="text-xs">
-                              Ejemplo {idx + 1}
-                            </Badge>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => copyPrompt(ejemplo, `${pilar.title} - Ejemplo ${idx + 1}`)}
-                              className="h-8 w-8 p-0 hover:bg-primary/10"
-                            >
-                              <Copy className={`h-4 w-4 ${copiedPrompt === ejemplo ? 'text-primary' : 'text-muted-foreground'}`} />
-                            </Button>
+                    <AccordionContent className="pb-6">
+                      <div className="grid gap-6">
+                        {pilar.ejemplos.map((ejemplo, idx) => (
+                          <div key={idx} className="bg-muted/50 rounded-lg p-5 border-l-4 border-primary">
+                            <div className="flex items-center justify-between mb-3">
+                              <Badge variant="secondary" className="text-sm px-3 py-1">
+                                Ejemplo {idx + 1}
+                              </Badge>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => copyPrompt(ejemplo, `${pilar.title} - Ejemplo ${idx + 1}`)}
+                                className="h-9 w-9 p-0 hover:bg-primary/10"
+                              >
+                                <Copy className={`h-4 w-4 ${copiedPrompt === ejemplo ? 'text-primary' : 'text-muted-foreground'}`} />
+                              </Button>
+                            </div>
+                            <pre className="text-sm text-foreground whitespace-pre-wrap font-mono bg-background/80 p-4 rounded-lg border leading-relaxed">
+                              {ejemplo}
+                            </pre>
                           </div>
-                          <pre className="text-xs text-foreground whitespace-pre-wrap font-mono bg-background/50 p-3 rounded border">
-                            {ejemplo}
-                          </pre>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
