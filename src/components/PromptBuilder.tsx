@@ -919,32 +919,32 @@ Tu deliverable debe demostrar:
   // Initial screen
   if (mode === 'initial') {
     return (
-      <section id="builder" className="py-20 bg-gradient-to-br from-background via-muted/20 to-primary/5">
+      <section id="builder" className="py-20 bg-gradient-to-br from-background via-muted/20 to-primary/5 animate-fade-in">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16 animate-fade-in">
-            <div className="inline-flex items-center justify-center p-4 bg-primary/10 rounded-full mb-6">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center justify-center p-4 bg-primary/10 rounded-full mb-6 animate-scale-in">
               <Wand2 className="h-12 w-12 text-primary" />
             </div>
-            <h2 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-6">
+            <h2 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-6 animate-fade-in">
               Prompt Maestro
             </h2>
-            <p className="text-xl text-muted-foreground max-w-4xl mx-auto mb-12 leading-relaxed">
+            <p className="text-xl text-muted-foreground max-w-4xl mx-auto mb-12 leading-relaxed animate-fade-in delay-200">
               Constructor de prompts avanzado y dinámico en dos modos. Crea prompts profesionales paso a paso con máxima personalización y control absoluto sobre el resultado.
             </p>
           </div>
 
-          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-500 cursor-pointer group" 
+          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in delay-300">
+            <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-500 cursor-pointer group hover-scale" 
                   onClick={() => setMode('simple')}>
               <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-green-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <CardHeader className="relative z-10">
+              <CardHeader className="relative z-10 transition-transform duration-300">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="p-3 bg-green-500/10 rounded-lg">
-                    <Brain className="h-8 w-8 text-green-600" />
+                  <div className="p-3 bg-red-500/10 rounded-lg transition-colors duration-300">
+                    <Brain className="h-8 w-8 text-red-600" />
                   </div>
                   <div>
-                    <CardTitle className="text-2xl text-green-700">🟢 Prompt Sencillo</CardTitle>
-                    <CardDescription className="text-green-600/80">7 pilares de la IA - Rápido y efectivo</CardDescription>
+                    <CardTitle className="text-2xl text-red-700">Prompt Sencillo</CardTitle>
+                    <CardDescription className="text-red-600/80">7 pilares de la IA - Rápido y efectivo</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -967,16 +967,16 @@ Tu deliverable debe demostrar:
               </CardContent>
             </Card>
 
-            <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-500 cursor-pointer group" 
+            <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-500 cursor-pointer group hover-scale" 
                   onClick={() => setMode('advanced')}>
               <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 via-orange-500/5 to-red-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <CardHeader className="relative z-10">
+              <CardHeader className="relative z-10 transition-transform duration-300">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="p-3 bg-red-500/10 rounded-lg">
+                  <div className="p-3 bg-red-500/10 rounded-lg transition-colors duration-300">
                     <Settings2 className="h-8 w-8 text-red-600" />
                   </div>
                   <div>
-                    <CardTitle className="text-2xl text-red-700">🔴 Prompt Avanzado</CardTitle>
+                    <CardTitle className="text-2xl text-red-700">Prompt Avanzado</CardTitle>
                     <CardDescription className="text-red-600/80">Experto - Máxima personalización</CardDescription>
                   </div>
                 </div>
@@ -1001,7 +1001,7 @@ Tu deliverable debe demostrar:
             </Card>
           </div>
 
-          <div className="text-center mt-12">
+          <div className="text-center mt-12 animate-fade-in delay-500">
             <p className="text-sm text-muted-foreground">
               Ambos modos incluyen navegación paso a paso, campos opcionales y salida en múltiples formatos
             </p>
@@ -1018,23 +1018,23 @@ Tu deliverable debe demostrar:
     const isLastStep = currentIndex === simpleSteps.length - 1;
 
     return (
-      <section className="py-20 bg-gradient-to-br from-background via-muted/20 to-primary/5 min-h-screen">
+      <section className="py-20 bg-gradient-to-br from-background via-muted/20 to-primary/5 min-h-screen animate-fade-in">
         <div className="container mx-auto px-4 max-w-4xl">
           {/* Header */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-12 animate-slide-in-right">
             <div className="flex items-center justify-center gap-4 mb-6">
-              <Button variant="ghost" size="sm" onClick={() => setMode('initial')}>
+              <Button variant="ghost" size="sm" onClick={() => setMode('initial')} className="transition-all duration-300 hover:scale-105">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Volver
               </Button>
               <div className="flex items-center gap-3">
-                <Brain className="h-8 w-8 text-green-600" />
-                <h1 className="text-3xl font-bold text-green-700">Prompt Sencillo</h1>
+                <Brain className="h-8 w-8 text-red-600 animate-scale-in" />
+                <h1 className="text-3xl font-bold text-red-700">Prompt Sencillo</h1>
               </div>
             </div>
             
             {/* Progress bubbles */}
-            <div className="flex items-center justify-center gap-2 mb-8">
+            <div className="flex items-center justify-center gap-2 mb-8 animate-fade-in delay-200">
               {simpleSteps.map((step, index) => {
                 const isActive = index === currentIndex;
                 const isCompleted = index < currentIndex;
@@ -1043,19 +1043,19 @@ Tu deliverable debe demostrar:
                 return (
                   <div key={step.key} className="flex items-center">
                     <div className={`
-                      relative flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-300
-                      ${isActive ? 'border-green-500 bg-green-500 text-white' : 
-                        isCompleted ? 'border-green-500 bg-green-500 text-white' : 
+                      relative flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-500 hover-scale
+                      ${isActive ? 'border-red-500 bg-red-500 text-white animate-scale-in' : 
+                        isCompleted ? 'border-red-500 bg-red-500 text-white' : 
                         'border-muted bg-background text-muted-foreground'}
                     `}>
                       <Icon className="h-5 w-5" />
                       {isActive && (
-                        <div className="absolute -inset-1 rounded-full border-2 border-green-300 animate-pulse"></div>
+                        <div className="absolute -inset-1 rounded-full border-2 border-red-300 animate-pulse"></div>
                       )}
                     </div>
                     {index < simpleSteps.length - 1 && (
-                      <div className={`w-8 h-0.5 mx-2 transition-all duration-300 ${
-                        index < currentIndex ? 'bg-green-500' : 'bg-muted'
+                      <div className={`w-8 h-0.5 mx-2 transition-all duration-500 ${
+                        index < currentIndex ? 'bg-red-500' : 'bg-muted'
                       }`}></div>
                     )}
                   </div>
@@ -1063,27 +1063,27 @@ Tu deliverable debe demostrar:
               })}
             </div>
             
-            <p className="text-lg text-muted-foreground">
+            <p className="text-lg text-muted-foreground animate-fade-in delay-300">
               Paso {currentIndex + 1} de {simpleSteps.length} • {Math.round(getSimpleProgress())}% completado
             </p>
           </div>
 
           {/* Step content */}
-          <Card className="mb-8">
+          <Card className="mb-8 animate-scale-in transition-all duration-300 hover:shadow-lg">
             <CardHeader>
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-500/10 rounded-lg">
-                  <currentStepData.icon className="h-8 w-8 text-green-600" />
+                <div className="p-3 bg-red-500/10 rounded-lg animate-scale-in delay-100">
+                  <currentStepData.icon className="h-8 w-8 text-red-600" />
                 </div>
                 <div>
-                  <CardTitle className="text-2xl">{currentStepData.title}</CardTitle>
-                  <CardDescription className="text-lg mt-2">{currentStepData.explanation}</CardDescription>
+                  <CardTitle className="text-2xl animate-fade-in delay-200">{currentStepData.title}</CardTitle>
+                  <CardDescription className="text-lg mt-2 animate-fade-in delay-300">{currentStepData.explanation}</CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 animate-fade-in delay-400">
               {/* Example */}
-              <div className="p-4 bg-muted/50 rounded-lg border-l-4 border-green-500">
+              <div className="p-4 bg-muted/50 rounded-lg border-l-4 border-red-500 transition-all duration-300 hover:bg-muted/70">
                 <p className="text-sm font-medium text-muted-foreground mb-2">Ejemplo ilustrativo:</p>
                 <p className="text-sm italic">{currentStepData.example}</p>
               </div>
@@ -1096,7 +1096,7 @@ Tu deliverable debe demostrar:
                     value={simpleData[currentSimpleStep]} 
                     onValueChange={(value) => setSimpleData(prev => ({ ...prev, [currentSimpleStep]: value }))}
                   >
-                    <SelectTrigger className="mt-2">
+                    <SelectTrigger className="mt-2 transition-all duration-300 hover:border-red-300">
                       <SelectValue placeholder="Selecciona una opción..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -1113,7 +1113,7 @@ Tu deliverable debe demostrar:
                     placeholder="O escribe tu propia versión personalizada..."
                     value={simpleData[currentSimpleStep]}
                     onChange={(e) => setSimpleData(prev => ({ ...prev, [currentSimpleStep]: e.target.value }))}
-                    className="mt-2"
+                    className="mt-2 transition-all duration-300 hover:border-red-300 focus:border-red-500"
                     rows={3}
                   />
                 </div>
@@ -1122,12 +1122,12 @@ Tu deliverable debe demostrar:
           </Card>
 
           {/* Navigation */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between animate-fade-in delay-500">
             <Button 
               variant="outline" 
               onClick={prevSimpleStep} 
               disabled={currentIndex === 0}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 transition-all duration-300 hover:scale-105 disabled:hover:scale-100"
             >
               <ChevronLeft className="h-4 w-4" />
               Anterior
@@ -1135,7 +1135,7 @@ Tu deliverable debe demostrar:
 
             <Button 
               onClick={nextSimpleStep}
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 transition-all duration-300 hover:scale-105"
             >
               {isLastStep ? 'Generar Prompt' : 'Siguiente'}
               {!isLastStep && <ChevronRight className="h-4 w-4" />}
@@ -1145,34 +1145,34 @@ Tu deliverable debe demostrar:
 
           {/* Generated prompt preview */}
           {generatedPrompt && (
-            <Card className="mt-8">
+            <Card className="mt-8 animate-fade-in">
               <CardHeader>
                 <CardTitle>Prompt Generado</CardTitle>
                 <div className="flex items-center gap-2">
                   <Button size="sm" variant="outline" onClick={() => setOutputFormat('text')} 
-                          className={outputFormat === 'text' ? 'bg-primary text-primary-foreground' : ''}>
+                          className={`transition-all duration-300 hover:scale-105 ${outputFormat === 'text' ? 'bg-primary text-primary-foreground' : ''}`}>
                     Texto
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => setOutputFormat('html')}
-                          className={outputFormat === 'html' ? 'bg-primary text-primary-foreground' : ''}>
+                          className={`transition-all duration-300 hover:scale-105 ${outputFormat === 'html' ? 'bg-primary text-primary-foreground' : ''}`}>
                     HTML
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => setOutputFormat('json')}
-                          className={outputFormat === 'json' ? 'bg-primary text-primary-foreground' : ''}>
+                          className={`transition-all duration-300 hover:scale-105 ${outputFormat === 'json' ? 'bg-primary text-primary-foreground' : ''}`}>
                     JSON
                   </Button>
-                  <Button size="sm" onClick={copyPrompt}>
+                  <Button size="sm" onClick={copyPrompt} className="transition-all duration-300 hover:scale-105">
                     <Copy className="h-4 w-4 mr-2" />
                     Copiar
                   </Button>
-                  <Button size="sm" variant="outline" onClick={resetBuilder}>
+                  <Button size="sm" variant="outline" onClick={resetBuilder} className="transition-all duration-300 hover:scale-105">
                     <RotateCcw className="h-4 w-4 mr-2" />
                     Resetear
                   </Button>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="bg-muted p-4 rounded-lg">
+                <div className="bg-muted p-4 rounded-lg transition-all duration-300 hover:bg-muted/80">
                   <pre className="whitespace-pre-wrap text-sm font-mono">{formatPromptOutput()}</pre>
                 </div>
               </CardContent>
@@ -1220,23 +1220,23 @@ Tu deliverable debe demostrar:
     };
 
     return (
-      <section className="py-20 bg-gradient-to-br from-background via-muted/20 to-primary/5 min-h-screen">
+      <section className="py-20 bg-gradient-to-br from-background via-muted/20 to-primary/5 min-h-screen animate-fade-in">
         <div className="container mx-auto px-4 max-w-4xl">
           {/* Header */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-12 animate-slide-in-right">
             <div className="flex items-center justify-center gap-4 mb-6">
-              <Button variant="ghost" size="sm" onClick={() => setMode('initial')}>
+              <Button variant="ghost" size="sm" onClick={() => setMode('initial')} className="transition-all duration-300 hover:scale-105">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Volver
               </Button>
               <div className="flex items-center gap-3">
-                <Settings2 className="h-8 w-8 text-red-600" />
+                <Settings2 className="h-8 w-8 text-red-600 animate-scale-in" />
                 <h1 className="text-3xl font-bold text-red-700">Prompt Avanzado</h1>
               </div>
             </div>
             
             {/* Progress bubbles */}
-            <div className="flex items-center justify-center gap-1 mb-8 flex-wrap">
+            <div className="flex items-center justify-center gap-1 mb-8 flex-wrap animate-fade-in delay-200">
               {advancedSteps.map((step, index) => {
                 const isActive = index === currentIndex;
                 const isCompleted = index < currentIndex;
@@ -1245,8 +1245,8 @@ Tu deliverable debe demostrar:
                 return (
                   <div key={step.key} className="flex items-center">
                     <div className={`
-                      relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300
-                      ${isActive ? 'border-red-500 bg-red-500 text-white' : 
+                      relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-500 hover-scale
+                      ${isActive ? 'border-red-500 bg-red-500 text-white animate-scale-in' : 
                         isCompleted ? 'border-red-500 bg-red-500 text-white' : 
                         'border-muted bg-background text-muted-foreground'}
                     `}>
@@ -1256,7 +1256,7 @@ Tu deliverable debe demostrar:
                       )}
                     </div>
                     {index < advancedSteps.length - 1 && (
-                      <div className={`w-4 h-0.5 mx-1 transition-all duration-300 ${
+                      <div className={`w-4 h-0.5 mx-1 transition-all duration-500 ${
                         index < currentIndex ? 'bg-red-500' : 'bg-muted'
                       }`}></div>
                     )}
@@ -1265,27 +1265,27 @@ Tu deliverable debe demostrar:
               })}
             </div>
             
-            <p className="text-lg text-muted-foreground">
+            <p className="text-lg text-muted-foreground animate-fade-in delay-300">
               Paso {currentIndex + 1} de {advancedSteps.length} • {Math.round(getAdvancedProgress())}% completado
             </p>
           </div>
 
           {/* Step content */}
-          <Card className="mb-8">
+          <Card className="mb-8 animate-scale-in transition-all duration-300 hover:shadow-lg">
             <CardHeader>
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-red-500/10 rounded-lg">
+                <div className="p-3 bg-red-500/10 rounded-lg animate-scale-in delay-100">
                   <currentStepData.icon className="h-8 w-8 text-red-600" />
                 </div>
                 <div>
-                  <CardTitle className="text-2xl">{currentStepData.title}</CardTitle>
-                  <CardDescription className="text-lg mt-2">{currentStepData.explanation}</CardDescription>
+                  <CardTitle className="text-2xl animate-fade-in delay-200">{currentStepData.title}</CardTitle>
+                  <CardDescription className="text-lg mt-2 animate-fade-in delay-300">{currentStepData.explanation}</CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 animate-fade-in delay-400">
               {/* Example */}
-              <div className="p-4 bg-muted/50 rounded-lg border-l-4 border-red-500">
+              <div className="p-4 bg-muted/50 rounded-lg border-l-4 border-red-500 transition-all duration-300 hover:bg-muted/70">
                 <p className="text-sm font-medium text-muted-foreground mb-2">Ejemplo ilustrativo:</p>
                 <p className="text-sm italic">{currentStepData.example}</p>
               </div>
@@ -1295,7 +1295,7 @@ Tu deliverable debe demostrar:
                 <div>
                   <label className="text-sm font-medium">Opciones preestablecidas</label>
                   <Select onValueChange={handleSelectPredefined}>
-                    <SelectTrigger className="mt-2">
+                    <SelectTrigger className="mt-2 transition-all duration-300 hover:border-red-300">
                       <SelectValue placeholder="Selecciona una opción..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -1315,12 +1315,12 @@ Tu deliverable debe demostrar:
                         <label className="text-sm font-medium">Elementos seleccionados:</label>
                         <div className="flex flex-wrap gap-2 mt-2">
                           {getCurrentArrayValue().map((item, index) => (
-                            <Badge key={index} variant="secondary" className="flex items-center gap-2">
+                            <Badge key={index} variant="secondary" className="flex items-center gap-2 transition-all duration-300 hover:scale-105">
                               {item}
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                                className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground transition-all duration-300"
                                 onClick={() => removeFromAdvancedArray(currentAdvancedStep, index)}
                               >
                                 <X className="h-3 w-3" />
@@ -1345,12 +1345,13 @@ Tu deliverable debe demostrar:
                               handleAddNewItem();
                             }
                           }}
+                          className="transition-all duration-300 hover:border-red-300 focus:border-red-500"
                         />
                         <Button 
                           size="sm" 
                           onClick={handleAddNewItem}
                           disabled={!newItemInput.trim()}
-                          className="bg-red-600 hover:bg-red-700"
+                          className="bg-red-600 hover:bg-red-700 transition-all duration-300 hover:scale-105 disabled:hover:scale-100"
                         >
                           <Plus className="h-4 w-4" />
                         </Button>
@@ -1365,7 +1366,7 @@ Tu deliverable debe demostrar:
                       placeholder="O escribe tu propia versión personalizada con máximo detalle..."
                       value={getCurrentStringValue()}
                       onChange={(e) => setAdvancedValue(currentAdvancedStep, e.target.value)}
-                      className="mt-2"
+                      className="mt-2 transition-all duration-300 hover:border-red-300 focus:border-red-500"
                       rows={4}
                     />
                   </div>
@@ -1375,12 +1376,12 @@ Tu deliverable debe demostrar:
           </Card>
 
           {/* Navigation */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between animate-fade-in delay-500">
             <Button 
               variant="outline" 
               onClick={prevAdvancedStep} 
               disabled={currentIndex === 0}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 transition-all duration-300 hover:scale-105 disabled:hover:scale-100"
             >
               <ChevronLeft className="h-4 w-4" />
               Anterior
@@ -1388,7 +1389,7 @@ Tu deliverable debe demostrar:
 
             <Button 
               onClick={nextAdvancedStep}
-              className="flex items-center gap-2 bg-red-600 hover:bg-red-700"
+              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 transition-all duration-300 hover:scale-105"
             >
               {isLastStep ? 'Generar Prompt' : 'Siguiente'}
               {!isLastStep && <ChevronRight className="h-4 w-4" />}
@@ -1398,34 +1399,34 @@ Tu deliverable debe demostrar:
 
           {/* Generated prompt preview */}
           {generatedPrompt && (
-            <Card className="mt-8">
+            <Card className="mt-8 animate-fade-in">
               <CardHeader>
                 <CardTitle>Prompt Generado</CardTitle>
                 <div className="flex items-center gap-2">
                   <Button size="sm" variant="outline" onClick={() => setOutputFormat('text')} 
-                          className={outputFormat === 'text' ? 'bg-primary text-primary-foreground' : ''}>
+                          className={`transition-all duration-300 hover:scale-105 ${outputFormat === 'text' ? 'bg-primary text-primary-foreground' : ''}`}>
                     Texto
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => setOutputFormat('html')}
-                          className={outputFormat === 'html' ? 'bg-primary text-primary-foreground' : ''}>
+                          className={`transition-all duration-300 hover:scale-105 ${outputFormat === 'html' ? 'bg-primary text-primary-foreground' : ''}`}>
                     HTML
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => setOutputFormat('json')}
-                          className={outputFormat === 'json' ? 'bg-primary text-primary-foreground' : ''}>
+                          className={`transition-all duration-300 hover:scale-105 ${outputFormat === 'json' ? 'bg-primary text-primary-foreground' : ''}`}>
                     JSON
                   </Button>
-                  <Button size="sm" onClick={copyPrompt}>
+                  <Button size="sm" onClick={copyPrompt} className="transition-all duration-300 hover:scale-105">
                     <Copy className="h-4 w-4 mr-2" />
                     Copiar
                   </Button>
-                  <Button size="sm" variant="outline" onClick={resetBuilder}>
+                  <Button size="sm" variant="outline" onClick={resetBuilder} className="transition-all duration-300 hover:scale-105">
                     <RotateCcw className="h-4 w-4 mr-2" />
                     Resetear
                   </Button>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="bg-muted p-4 rounded-lg">
+                <div className="bg-muted p-4 rounded-lg transition-all duration-300 hover:bg-muted/80">
                   <pre className="whitespace-pre-wrap text-sm font-mono">{formatPromptOutput()}</pre>
                 </div>
               </CardContent>
