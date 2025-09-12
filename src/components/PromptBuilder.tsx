@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Copy, Wand2, RefreshCw, ChevronLeft, ChevronRight, User, Target, Users, Volume2, Palette, BookOpen, Shield, MessageCircle, FileText, Settings2, Globe, Eye, Sparkles, ArrowLeft, ArrowRight, RotateCcw, Brain, Lightbulb } from "lucide-react";
+import { Copy, Wand2, RefreshCw, ChevronLeft, ChevronRight, User, Target, Users, Volume2, Palette, BookOpen, Shield, MessageCircle, FileText, Settings2, Globe, Eye, Sparkles, ArrowLeft, ArrowRight, RotateCcw, Brain, Lightbulb, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 type Mode = 'initial' | 'simple' | 'advanced';
@@ -26,14 +26,14 @@ interface SimplePromptData {
 interface AdvancedPromptData {
   objective: string;
   context: string;
-  audience: string;
-  tone: string;
-  style: string;
+  audience: string[];
+  tone: string[];
+  style: string[];
   detail: string;
-  structure: string;
-  restrictions: string;
-  keywords: string;
-  examples: string;
+  structure: string[];
+  restrictions: string[];
+  keywords: string[];
+  examples: string[];
   format: string;
   additional: string;
 }
@@ -62,17 +62,55 @@ const PromptBuilder = () => {
   const [advancedData, setAdvancedData] = useState<AdvancedPromptData>({
     objective: '',
     context: '',
-    audience: '',
-    tone: '',
-    style: '',
+    audience: [],
+    tone: [],
+    style: [],
     detail: '',
-    structure: '',
-    restrictions: '',
-    keywords: '',
-    examples: '',
+    structure: [],
+    restrictions: [],
+    keywords: [],
+    examples: [],
     format: '',
     additional: ''
   });
+
+  // Helper function to check if a field is an array field
+  const isArrayField = (step: AdvancedStep): boolean => {
+    return ['audience', 'tone', 'style', 'structure', 'restrictions', 'keywords', 'examples'].includes(step);
+  };
+
+  // Helper function to get current value for advanced steps
+  const getAdvancedValue = (step: AdvancedStep): string | string[] => {
+    return advancedData[step];
+  };
+
+  // Helper function to set advanced value
+  const setAdvancedValue = (step: AdvancedStep, value: string | string[]) => {
+    setAdvancedData(prev => ({ ...prev, [step]: value }));
+  };
+
+  // Functions to handle dynamic arrays
+  const addToAdvancedArray = (step: AdvancedStep, value: string) => {
+    if (isArrayField(step) && value.trim()) {
+      const currentArray = advancedData[step] as string[];
+      if (!currentArray.includes(value.trim())) {
+        setAdvancedData(prev => ({
+          ...prev,
+          [step]: [...currentArray, value.trim()]
+        }));
+      }
+    }
+  };
+
+  const removeFromAdvancedArray = (step: AdvancedStep, index: number) => {
+    if (isArrayField(step)) {
+      const currentArray = advancedData[step] as string[];
+      setAdvancedData(prev => ({
+        ...prev,
+        [step]: currentArray.filter((_, i) => i !== index)
+      }));
+    }
+  };
 
   // Steps configuration for both modes
   const simpleSteps: { key: SimpleStep; title: string; icon: any; explanation: string; example: string }[] = [
@@ -127,7 +165,7 @@ const PromptBuilder = () => {
     }
   ];
 
-  const advancedSteps: { key: AdvancedStep; title: string; icon: any; explanation: string; example: string }[] = [
+  const advancedSteps: { key: AdvancedStep; title: string; icon: any; explanation: string; example: string; dynamicButton?: string }[] = [
     {
       key: 'objective',
       title: 'Objetivo principal',
@@ -147,21 +185,24 @@ const PromptBuilder = () => {
       title: 'Audiencia segmentada',
       icon: Users,
       explanation: 'Selecciona el público objetivo en detalle.',
-      example: 'Está dirigido a inversores interesados en proyectos de innovación tecnológica.'
+      example: 'Está dirigido a inversores interesados en proyectos de innovación tecnológica.',
+      dynamicButton: '+ Añadir otra audiencia'
     },
     {
       key: 'tone',
       title: 'Tono de voz',
       icon: Volume2,
       explanation: 'Elige el tono o combina varios.',
-      example: 'El texto debe sonar profesional y confiable, pero también inspirador.'
+      example: 'El texto debe sonar profesional y confiable, pero también inspirador.',
+      dynamicButton: '+ Añadir otro tono'
     },
     {
       key: 'style',
       title: 'Estilo narrativo',
       icon: Palette,
       explanation: 'Selecciona la manera en que debe estar escrito.',
-      example: 'Quiero un estilo técnico, con ejemplos y comparaciones claras.'
+      example: 'Quiero un estilo técnico, con ejemplos y comparaciones claras.',
+      dynamicButton: '+ Añadir otro estilo'
     },
     {
       key: 'detail',
@@ -175,28 +216,32 @@ const PromptBuilder = () => {
       title: 'Estructura del mensaje',
       icon: Settings2,
       explanation: 'Organiza cómo debe presentarse el contenido.',
-      example: 'Debe comenzar con una introducción, luego desarrollar el tema y terminar con una llamada a la acción.'
+      example: 'Debe comenzar con una introducción, luego desarrollar el tema y terminar con una llamada a la acción.',
+      dynamicButton: '+ Añadir otro bloque de estructura'
     },
     {
       key: 'restrictions',
       title: 'Restricciones avanzadas',
       icon: Shield,
       explanation: 'Define lo que debe evitarse.',
-      example: 'Evitar lenguaje negativo o términos técnicos demasiado complejos.'
+      example: 'Evitar lenguaje negativo o términos técnicos demasiado complejos.',
+      dynamicButton: '+ Añadir otra restricción'
     },
     {
       key: 'keywords',
       title: 'Palabras clave',
       icon: Lightbulb,
       explanation: 'Indica conceptos que deben aparecer.',
-      example: 'El texto debe incluir las palabras: innovación, confianza, crecimiento.'
+      example: 'El texto debe incluir las palabras: innovación, confianza, crecimiento.',
+      dynamicButton: '+ Añadir otra palabra clave'
     },
     {
       key: 'examples',
       title: 'Ejemplos de entrada/salida',
       icon: BookOpen,
       explanation: 'Proporciona ejemplos para guiar a la IA.',
-      example: 'Input: "Explica qué es la IA generativa en 3 frases sencillas." Output esperado: "La IA generativa crea contenido original como texto o imágenes..."'
+      example: 'Input: "Explica qué es la IA generativa en 3 frases sencillas." Output esperado: "La IA generativa crea contenido original como texto o imágenes..."',
+      dynamicButton: '+ Añadir otro ejemplo'
     },
     {
       key: 'format',
@@ -458,101 +503,327 @@ const PromptBuilder = () => {
     return ((currentIndex + 1) / advancedSteps.length) * 100;
   };
 
-  // Prompt generation functions
+  // Enhanced prompt generation functions with more sophisticated templates
   const generateSimplePrompt = () => {
-    const sections = [];
+    const promptSections = [];
+    
+    // Build opening statement
+    const openingTemplate = "Actúa como un experto profesional especializado en comunicación estratégica y copywriting de alto nivel.";
+    promptSections.push(`# ROL Y EXPERTISE\n${openingTemplate}`);
     
     if (simpleData.objective) {
-      sections.push(`# OBJETIVO\n${simpleData.objective}`);
+      const objectiveTemplate = `Tu misión específica es: ${simpleData.objective}. 
+      
+Para esto, debes desarrollar una estrategia de comunicación que maximice el impacto y genere los resultados deseados, aplicando las mejores prácticas de persuasión ética y comunicación efectiva.`;
+      promptSections.push(`# OBJETIVO ESTRATÉGICO\n${objectiveTemplate}`);
     }
     
     if (simpleData.audience) {
-      sections.push(`# AUDIENCIA\nDirige tu respuesta a: ${simpleData.audience}`);
+      const audienceTemplate = `Tu mensaje debe estar perfectamente adaptado para: ${simpleData.audience}.
+
+Considera profundamente:
+- Sus motivaciones principales y puntos de dolor específicos
+- Su nivel de conocimiento técnico y vocabulario apropiado
+- Sus procesos de toma de decisión y factores influyentes
+- El contexto en el que consumirán tu mensaje
+- Sus expectativas y prejuicios sobre el tema`;
+      promptSections.push(`# AUDIENCIA OBJETIVO\n${audienceTemplate}`);
     }
     
     if (simpleData.tone) {
-      sections.push(`# TONO DE VOZ\nUtiliza un tono: ${simpleData.tone}`);
+      const toneTemplate = `Mantén un tono consistentemente: ${simpleData.tone}.
+
+Este tono debe reflejarse en:
+- La elección de vocabulario y estructura de frases
+- El nivel de formalidad y proximidad emocional
+- Los ejemplos y referencias que uses
+- La cadencia y ritmo del texto
+- La personalidad de marca que proyectes`;
+      promptSections.push(`# TONO DE COMUNICACIÓN\n${toneTemplate}`);
     }
     
     if (simpleData.style) {
-      sections.push(`# ESTILO NARRATIVO\nEscribe con un estilo: ${simpleData.style}`);
+      const styleTemplate = `Utiliza un estilo narrativo: ${simpleData.style}.
+
+Aplica las siguientes técnicas:
+- Estructura la información de manera lógica y progresiva
+- Utiliza transiciones fluidas entre conceptos
+- Incorpora elementos que mantengan el engagement
+- Balancea información y narrativa de manera efectiva
+- Crea conexión emocional apropiada para el objetivo`;
+      promptSections.push(`# ESTILO NARRATIVO\n${styleTemplate}`);
     }
     
     if (simpleData.detail) {
-      sections.push(`# NIVEL DE DETALLE\n${simpleData.detail}`);
+      const detailTemplate = `El nivel de profundidad debe ser: ${simpleData.detail}.
+
+Considera:
+- La capacidad de atención de tu audiencia
+- El contexto de consumo del contenido
+- El balance óptimo entre completitud y accesibilidad
+- La inclusión de ejemplos y evidencia de apoyo
+- La densidad informativa apropiada`;
+      promptSections.push(`# NIVEL DE DETALLE\n${detailTemplate}`);
     }
     
     if (simpleData.restrictions) {
-      sections.push(`# RESTRICCIONES\n${simpleData.restrictions}`);
+      const restrictionsTemplate = `IMPORTANTE - Restricciones obligatorias: ${simpleData.restrictions}.
+
+Adhiérete estrictamente a estas limitaciones mientras:
+- Maximizas el valor dentro de los parámetros establecidos
+- Encuentras alternativas creativas que respeten las restricciones
+- Mantienes la efectividad del mensaje
+- Aseguras el cumplimiento total de las directrices`;
+      promptSections.push(`# RESTRICCIONES CRÍTICAS\n${restrictionsTemplate}`);
     }
     
     if (simpleData.format) {
-      sections.push(`# FORMATO DE SALIDA\nEstructura el resultado como: ${simpleData.format}`);
-    }
+      const formatTemplate = `Estructura y presenta el resultado como: ${simpleData.format}.
 
-    // Add quality guidelines
-    sections.push(`# INSTRUCCIONES FINALES\nCrea una respuesta completa y profesional que cumpla con todos los criterios establecidos. Mantén consistencia en el tono y asegúrate de que el contenido sea valioso y relevante para la audiencia objetivo.`);
-    
-    setGeneratedPrompt(sections.join('\n\n'));
-  };
-
-  const generateAdvancedPrompt = () => {
-    const sections = [];
-    
-    if (advancedData.objective) {
-      sections.push(`# OBJETIVO PRINCIPAL\n${advancedData.objective}\n\nDesglosa este objetivo en componentes específicos y establece criterios de éxito medibles.`);
-    }
-    
-    if (advancedData.context) {
-      sections.push(`# CONTEXTO DETALLADO\n${advancedData.context}\n\nConsidera las implicaciones estratégicas, factores del entorno competitivo y tendencias actuales del mercado.`);
-    }
-    
-    if (advancedData.audience) {
-      sections.push(`# AUDIENCIA SEGMENTADA\nDirige tu respuesta específicamente a: ${advancedData.audience}\n\nAdapta el nivel de detalle técnico, lenguaje y ejemplos para maximizar resonancia y comprensión. Considera sus motivaciones principales y procesos de toma de decisión.`);
-    }
-    
-    if (advancedData.tone) {
-      sections.push(`# TONO DE VOZ\nUtiliza un tono: ${advancedData.tone}\n\nMantén consistencia tonal a lo largo de toda la respuesta y asegúrate de que refleje los valores de la marca.`);
-    }
-    
-    if (advancedData.style) {
-      sections.push(`# ESTILO NARRATIVO\nEscribe con un estilo: ${advancedData.style}\n\nUtiliza transiciones fluidas entre conceptos y estructura la información de manera lógica y progresiva.`);
-    }
-    
-    if (advancedData.detail) {
-      sections.push(`# NIVEL DE DETALLE\n${advancedData.detail}\n\nBalancea profundidad con claridad, proporcionando la información necesaria sin abrumar a la audiencia.`);
-    }
-    
-    if (advancedData.structure) {
-      sections.push(`# ESTRUCTURA DEL MENSAJE\nOrganiza el contenido siguiendo esta estructura: ${advancedData.structure}\n\nAsegúrate de que cada sección agregue valor único y contribuya al objetivo general.`);
-    }
-    
-    if (advancedData.restrictions) {
-      sections.push(`# RESTRICCIONES AVANZADAS\n${advancedData.restrictions}\n\nAdhiérete estrictamente a estas limitaciones mientras maximizas el valor dentro de los parámetros establecidos.`);
-    }
-    
-    if (advancedData.keywords) {
-      sections.push(`# PALABRAS CLAVE\nIncorpora naturalmente estos conceptos: ${advancedData.keywords}\n\nIntégra las palabras clave de manera orgánica sin forzar su inclusión.`);
-    }
-    
-    if (advancedData.examples) {
-      sections.push(`# EJEMPLOS Y REFERENCIAS\nUtiliza como referencia: ${advancedData.examples}\n\nAplica estos ejemplos para ilustrar puntos clave y proporcionar evidencia concreta.`);
-    }
-    
-    if (advancedData.format) {
-      sections.push(`# FORMATO DE SALIDA\nEstructura el resultado como: ${advancedData.format}\n\nSigue las convenciones del formato especificado y optimiza para el canal de distribución.`);
-    }
-    
-    if (advancedData.additional) {
-      sections.push(`# CONFIGURACIÓN ADICIONAL\n${advancedData.additional}\n\nAplica estas configuraciones específicas para optimizar el resultado final.`);
+Optimiza para:
+- Las convenciones específicas del formato elegido
+- La experiencia de usuario en el canal de distribución
+- Los elementos visuales y de diseño apropiados
+- La scanabilidad y facilidad de consumo
+- Las mejores prácticas del medio específico`;
+      promptSections.push(`# FORMATO Y PRESENTACIÓN\n${formatTemplate}`);
     }
 
     // Add comprehensive methodology
-    sections.push(`# METODOLOGÍA DE DESARROLLO\nEstructura tu respuesta utilizando un framework sistemático:\n- Análisis de la situación actual\n- Identificación de oportunidades y desafíos\n- Desarrollo de soluciones específicas\n- Plan de implementación con pasos concretos\n- Métricas de éxito y seguimiento`);
+    const methodologyTemplate = `Desarrolla tu respuesta siguiendo esta metodología sistemática:
+
+1. **ANÁLISIS INICIAL**: Comprende profundamente la situación, contexto y necesidades
+2. **ESTRATEGIA**: Define el enfoque más efectivo para alcanzar el objetivo
+3. **DESARROLLO**: Crea el contenido aplicando las mejores prácticas
+4. **OPTIMIZACIÓN**: Refina el mensaje para máximo impacto
+5. **VALIDACIÓN**: Asegura coherencia con todos los criterios establecidos`;
+    promptSections.push(`# METODOLOGÍA DE TRABAJO\n${methodologyTemplate}`);
     
-    sections.push(`# CRITERIOS DE CALIDAD AVANZADOS\nAsegúrate de que tu respuesta:\n- Proporcione valor inmediato y accionable\n- Esté respaldada por evidencia o mejores prácticas\n- Considere múltiples perspectivas y escenarios\n- Incluya consideraciones de riesgo y mitigación\n- Mantenga equilibrio entre innovación y pragmatismo\n- Demuestre expertise profesional del más alto nivel`);
+    const qualityTemplate = `Tu respuesta debe demostrar:
+- **Expertise profesional** del más alto nivel en comunicación estratégica
+- **Valor inmediato** que pueda aplicarse directamente
+- **Coherencia total** con la marca y objetivos establecidos
+- **Innovación** que diferencie del contenido estándar
+- **Impacto medible** en la audiencia objetivo
+- **Calidad premium** que refleje estándares corporativos de excelencia`;
+    promptSections.push(`# ESTÁNDARES DE CALIDAD\n${qualityTemplate}`);
     
-    setGeneratedPrompt(sections.join('\n\n'));
+    setGeneratedPrompt(promptSections.join('\n\n'));
+  };
+
+  const generateAdvancedPrompt = () => {
+    const promptSections = [];
+    
+    // Enhanced opening for advanced mode
+    const advancedOpeningTemplate = `Actúa como un consultor estratégico senior con expertise multidisciplinario en comunicación corporativa, psicología del consumidor, marketing estratégico y análisis de audiencias. Tu enfoque debe ser sistemático, basado en evidencia y orientado a resultados medibles.`;
+    promptSections.push(`# ROL ESPECIALIZADO Y EXPERTISE\n${advancedOpeningTemplate}`);
+    
+    if (advancedData.objective) {
+      const objectiveTemplate = `Tu objetivo estratégico es: ${advancedData.objective}
+
+Desglosa este objetivo en:
+- **Componentes específicos** y deliverables concretos
+- **Criterios de éxito** medibles y verificables
+- **Métricas de impacto** relevantes para el negocio
+- **Benchmarks de rendimiento** contra mejores prácticas
+- **Timeline de resultados** esperados y milestone clave
+- **Análisis de riesgo** y planes de contingencia`;
+      promptSections.push(`# OBJETIVO ESTRATÉGICO AVANZADO\n${objectiveTemplate}`);
+    }
+    
+    if (advancedData.context) {
+      const contextTemplate = `Contexto estratégico detallado: ${advancedData.context}
+
+Analiza y considera:
+- **Factores macroeconómicos** y tendencias del sector
+- **Landscape competitivo** y positioning relativo
+- **Timing de mercado** y window of opportunity
+- **Stakeholders clave** y sus motivaciones específicas
+- **Recursos disponibles** y limitaciones operacionales
+- **Implicaciones regulatorias** y compliance requirements
+- **Cultural context** y sensibilidades regionales`;
+      promptSections.push(`# ANÁLISIS CONTEXTUAL PROFUNDO\n${contextTemplate}`);
+    }
+    
+    if (advancedData.audience.length > 0) {
+      const audienceTemplate = `Audiencias objetivo segmentadas: ${advancedData.audience.join(', ')}
+
+Para cada segmento, desarrolla:
+- **Perfil psicográfico detallado** con motivaciones profundas
+- **Customer journey mapping** con touchpoints críticos
+- **Pain points específicos** y job-to-be-done framework
+- **Decision-making process** y influenciadores clave
+- **Communication preferences** y canales preferidos
+- **Messaging hierarchy** personalizado por segmento
+- **Personalization strategy** para máxima resonancia`;
+      promptSections.push(`# SEGMENTACIÓN DE AUDIENCIA AVANZADA\n${audienceTemplate}`);
+    }
+    
+    if (advancedData.tone.length > 0) {
+      const toneTemplate = `Combinación tonal estratégica: ${advancedData.tone.join(' + ')}
+
+Implementa una arquitectura tonal que:
+- **Establezca jerarquía** entre los diferentes tonos
+- **Adapte dinámicamente** según el contexto del mensaje
+- **Mantenga consistencia** de marca a lo largo del customer journey
+- **Genere emotional engagement** apropiado para cada audiencia
+- **Refleje valores corporativos** de manera auténtica
+- **Diferencie competitivamente** en el mercado`;
+      promptSections.push(`# ARQUITECTURA TONAL SOFISTICADA\n${toneTemplate}`);
+    }
+    
+    if (advancedData.style.length > 0) {
+      const styleTemplate = `Framework estilístico integrado: ${advancedData.style.join(' + ')}
+
+Combina estos estilos para:
+- **Crear narrative arc** compelling y memorable
+- **Optimizar information architecture** para comprensión
+- **Integrar storytelling elements** con data-driven insights
+- **Balancear emotion y logic** según objetivos específicos
+- **Implementar persuasion techniques** éticas y efectivas
+- **Asegurar scalability** del approach a otros contenidos`;
+      promptSections.push(`# FRAMEWORK ESTILÍSTICO AVANZADO\n${styleTemplate}`);
+    }
+    
+    if (advancedData.detail) {
+      const detailTemplate = `Profundidad analítica: ${advancedData.detail}
+
+Estructura el contenido con:
+- **Executive summary** para quick consumption
+- **Detailed analysis** con supporting evidence
+- **Actionable insights** y next steps concretos
+- **Supporting data** y statistical validation
+- **Expert opinions** y third-party validation
+- **Implementation roadmap** con timeline específico`;
+      promptSections.push(`# ARQUITECTURA DE INFORMACIÓN\n${detailTemplate}`);
+    }
+    
+    if (advancedData.structure.length > 0) {
+      const structureTemplate = `Estructura de contenido optimizada: ${advancedData.structure.join(' → ')}
+
+Cada sección debe:
+- **Agregar valor único** y diferenciado
+- **Contribuir al objetivo** general de manera medible
+- **Mantener engagement** y flow natural
+- **Incluir transition elements** que conecten ideas
+- **Incorporar proof points** y credibility markers
+- **Facilitar easy scanning** y quick reference`;
+      promptSections.push(`# ARQUITECTURA ESTRUCTURAL\n${structureTemplate}`);
+    }
+    
+    if (advancedData.restrictions.length > 0) {
+      const restrictionsTemplate = `Restricciones operacionales críticas:
+${advancedData.restrictions.map(r => `• ${r}`).join('\n')}
+
+Cumplimiento obligatorio:
+- **Adherencia estricta** a todas las limitaciones establecidas
+- **Creative solutions** dentro de los parámetros definidos
+- **Risk mitigation** para evitar violaciones
+- **Quality assurance** con compliance checklist
+- **Legal review** considerations para contenido público
+- **Brand guidelines** alignment verification`;
+      promptSections.push(`# COMPLIANCE Y RESTRICCIONES\n${restrictionsTemplate}`);
+    }
+    
+    if (advancedData.keywords.length > 0) {
+      const keywordsTemplate = `Keywords estratégicas para integración orgánica:
+${advancedData.keywords.map(k => `• ${k}`).join('\n')}
+
+Implementación SEO-optimizada:
+- **Natural integration** sin keyword stuffing
+- **Semantic variations** y related terms
+- **Context relevance** para search intent
+- **Long-tail opportunities** para nicho targeting
+- **Content clusters** y topic authority building
+- **User intent matching** con search behavior`;
+      promptSections.push(`# ESTRATEGIA DE KEYWORDS\n${keywordsTemplate}`);
+    }
+    
+    if (advancedData.examples.length > 0) {
+      const examplesTemplate = `Referencias y ejemplos para benchmarking:
+${advancedData.examples.map(e => `• ${e}`).join('\n')}
+
+Utiliza estos ejemplos para:
+- **Illustrate complex concepts** con analogías efectivas
+- **Provide social proof** y third-party validation
+- **Demonstrate practical application** de los conceptos
+- **Set performance benchmarks** y success metrics
+- **Show before/after scenarios** con outcomes medibles
+- **Create aspirational vision** de resultados posibles`;
+      promptSections.push(`# EJEMPLOS Y BENCHMARKING\n${examplesTemplate}`);
+    }
+    
+    if (advancedData.format) {
+      const formatTemplate = `Especificaciones de formato: ${advancedData.format}
+
+Optimización específica:
+- **Platform-native optimization** para máximo rendimiento
+- **User experience design** considerations
+- **Accessibility standards** y inclusive design
+- **Mobile-first approach** con responsive elements
+- **Engagement optimization** específica del canal
+- **Conversion path design** hacia objetivos definidos
+- **A/B testing framework** para continuous improvement`;
+      promptSections.push(`# OPTIMIZACIÓN DE FORMATO\n${formatTemplate}`);
+    }
+    
+    if (advancedData.additional) {
+      const additionalTemplate = `Configuraciones especializadas: ${advancedData.additional}
+
+Implementación avanzada:
+- **Cultural adaptation** y localization strategy
+- **Technical specifications** y platform requirements  
+- **Brand voice calibration** específica del canal
+- **Performance metrics** y success tracking
+- **Iterative improvement** based on data analysis
+- **Scalability planning** para future applications`;
+      promptSections.push(`# CONFIGURACIÓN ESPECIALIZADA\n${additionalTemplate}`);
+    }
+
+    // Advanced methodology
+    const advancedMethodologyTemplate = `Metodología de desarrollo estratégico:
+
+**FASE 1: ANÁLISIS PROFUNDO**
+- Situational analysis con framework SWOT expandido
+- Competitive intelligence y market positioning
+- Audience research y behavioral insights
+- Channel optimization y media planning
+
+**FASE 2: ESTRATEGIA INTEGRADA**
+- Message architecture y hierarchy definition
+- Content strategy roadmap con timeline
+- Channel mix optimization y budget allocation
+- KPI framework y measurement plan
+
+**FASE 3: EJECUCIÓN PREMIUM**
+- Content creation con quality assurance
+- Cross-platform adaptation y optimization
+- Stakeholder alignment y approval process  
+- Performance monitoring y real-time adjustment
+
+**FASE 4: OPTIMIZACIÓN CONTINUA**
+- Data analysis y insight extraction
+- Performance benchmarking contra objectives
+- Iterative improvement recommendations
+- Scaling strategy para future applications`;
+    promptSections.push(`# METODOLOGÍA ESTRATÉGICA AVANZADA\n${advancedMethodologyTemplate}`);
+    
+    const premiumQualityTemplate = `Estándares de excelencia corporativa:
+
+Tu deliverable debe demostrar:
+- **Strategic thinking** de nivel C-suite con business acumen
+- **Data-driven insights** con quantitative backing
+- **Innovation leadership** que establezca new benchmarks
+- **Operational excellence** en execution y delivery
+- **Stakeholder management** skills en communication
+- **ROI optimization** con clear value proposition
+- **Risk management** con contingency planning
+- **Scalability planning** para enterprise deployment
+- **Competitive differentiation** que genere sustainable advantage
+- **Brand elevation** que refuerce market positioning`;
+    promptSections.push(`# ESTÁNDARES DE EXCELENCIA CORPORATIVA\n${premiumQualityTemplate}`);
+    
+    setGeneratedPrompt(promptSections.join('\n\n'));
   };
 
   // Output formatting
@@ -589,7 +860,8 @@ const PromptBuilder = () => {
             mode: mode,
             outputFormat: outputFormat,
             totalSections: sections.length,
-            wordCount: generatedPrompt.split(' ').length
+            wordCount: generatedPrompt.split(' ').length,
+            configuration: mode === 'simple' ? simpleData : advancedData
           }
         };
         return JSON.stringify(jsonOutput, null, 2);
@@ -629,14 +901,14 @@ const PromptBuilder = () => {
     setAdvancedData({
       objective: '',
       context: '',
-      audience: '',
-      tone: '',
-      style: '',
+      audience: [],
+      tone: [],
+      style: [],
       detail: '',
-      structure: '',
-      restrictions: '',
-      keywords: '',
-      examples: '',
+      structure: [],
+      restrictions: [],
+      keywords: [],
+      examples: [],
       format: '',
       additional: ''
     });
@@ -652,10 +924,10 @@ const PromptBuilder = () => {
               <Wand2 className="h-12 w-12 text-primary" />
             </div>
             <h2 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-6">
-              Prompt Builder Profesional
+              Prompt Maestro
             </h2>
             <p className="text-xl text-muted-foreground max-w-4xl mx-auto mb-12 leading-relaxed">
-              Crea prompts avanzados paso a paso. Dos modos diseñados para diferentes niveles de personalización y control absoluto sobre el resultado.
+              Constructor de prompts avanzado y dinámico en dos modos. Crea prompts profesionales paso a paso con máxima personalización y control absoluto sobre el resultado.
             </p>
           </div>
 
@@ -676,7 +948,7 @@ const PromptBuilder = () => {
               </CardHeader>
               <CardContent className="relative z-10">
                 <p className="text-muted-foreground mb-6 leading-relaxed">
-                  "Comienza creando tu prompt paso a paso. Rápido, sencillo y siempre coherente con la marca."
+                  "Crea tu prompt en pocos pasos. Rápido, sencillo y siempre coherente con la marca."
                 </p>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
@@ -709,17 +981,17 @@ const PromptBuilder = () => {
               </CardHeader>
               <CardContent className="relative z-10">
                 <p className="text-muted-foreground mb-6 leading-relaxed">
-                  "Diseña un prompt único, ajustado a cada detalle. Control absoluto sobre el resultado."
+                  "Diseña un prompt único, con control absoluto sobre cada detalle. Personaliza y ajusta hasta el mínimo matiz."
                 </p>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="text-xs">12 pasos expandidos</Badge>
-                    <Badge variant="outline" className="text-xs">Personalización total</Badge>
+                    <Badge variant="outline" className="text-xs">Dinámicas interactivas</Badge>
                   </div>
                   <ul className="text-sm text-muted-foreground space-y-1">
                     <li>• Contexto detallado y estructura</li>
                     <li>• Keywords y ejemplos específicos</li>
-                    <li>• Opciones adicionales avanzadas</li>
+                    <li>• Botones dinámicos "+ Añadir"</li>
                     <li>• Control granular sobre cada aspecto</li>
                   </ul>
                 </div>
@@ -909,11 +1181,42 @@ const PromptBuilder = () => {
     );
   }
 
-  // Advanced mode wizard
+  // Advanced mode wizard with dynamic buttons
   if (mode === 'advanced') {
     const currentStepData = advancedSteps.find(step => step.key === currentAdvancedStep)!;
     const currentIndex = advancedSteps.findIndex(step => step.key === currentAdvancedStep);
     const isLastStep = currentIndex === advancedSteps.length - 1;
+    const isCurrentFieldArray = isArrayField(currentAdvancedStep);
+    const [newItemInput, setNewItemInput] = useState('');
+
+    const handleAddNewItem = () => {
+      if (newItemInput.trim() && isArrayField(currentAdvancedStep)) {
+        addToAdvancedArray(currentAdvancedStep, newItemInput.trim());
+        setNewItemInput('');
+      }
+    };
+
+    const handleSelectPredefined = (value: string) => {
+      if (isArrayField(currentAdvancedStep)) {
+        addToAdvancedArray(currentAdvancedStep, value);
+      } else {
+        setAdvancedValue(currentAdvancedStep, value);
+      }
+    };
+
+    const getCurrentArrayValue = (): string[] => {
+      if (isArrayField(currentAdvancedStep)) {
+        return advancedData[currentAdvancedStep] as string[];
+      }
+      return [];
+    };
+
+    const getCurrentStringValue = (): string => {
+      if (!isArrayField(currentAdvancedStep)) {
+        return advancedData[currentAdvancedStep] as string;
+      }
+      return '';
+    };
 
     return (
       <section className="py-20 bg-gradient-to-br from-background via-muted/20 to-primary/5 min-h-screen">
@@ -990,10 +1293,7 @@ const PromptBuilder = () => {
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium">Opciones preestablecidas</label>
-                  <Select 
-                    value={advancedData[currentAdvancedStep]} 
-                    onValueChange={(value) => setAdvancedData(prev => ({ ...prev, [currentAdvancedStep]: value }))}
-                  >
+                  <Select onValueChange={handleSelectPredefined}>
                     <SelectTrigger className="mt-2">
                       <SelectValue placeholder="Selecciona una opción..." />
                     </SelectTrigger>
@@ -1005,16 +1305,70 @@ const PromptBuilder = () => {
                   </Select>
                 </div>
 
-                <div>
-                  <label className="text-sm font-medium">Personalización libre</label>
-                  <Textarea 
-                    placeholder="O escribe tu propia versión personalizada con máximo detalle..."
-                    value={advancedData[currentAdvancedStep]}
-                    onChange={(e) => setAdvancedData(prev => ({ ...prev, [currentAdvancedStep]: e.target.value }))}
-                    className="mt-2"
-                    rows={4}
-                  />
-                </div>
+                {/* Array fields with dynamic buttons */}
+                {isCurrentFieldArray ? (
+                  <div className="space-y-4">
+                    {/* Current items */}
+                    {getCurrentArrayValue().length > 0 && (
+                      <div>
+                        <label className="text-sm font-medium">Elementos seleccionados:</label>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {getCurrentArrayValue().map((item, index) => (
+                            <Badge key={index} variant="secondary" className="flex items-center gap-2">
+                              {item}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                                onClick={() => removeFromAdvancedArray(currentAdvancedStep, index)}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Add new item */}
+                    <div>
+                      <label className="text-sm font-medium">{currentStepData.dynamicButton}</label>
+                      <div className="flex gap-2 mt-2">
+                        <Input
+                          placeholder="Escribe y presiona + para añadir..."
+                          value={newItemInput}
+                          onChange={(e) => setNewItemInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddNewItem();
+                            }
+                          }}
+                        />
+                        <Button 
+                          size="sm" 
+                          onClick={handleAddNewItem}
+                          disabled={!newItemInput.trim()}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* String fields */
+                  <div>
+                    <label className="text-sm font-medium">Personalización libre</label>
+                    <Textarea 
+                      placeholder="O escribe tu propia versión personalizada con máximo detalle..."
+                      value={getCurrentStringValue()}
+                      onChange={(e) => setAdvancedValue(currentAdvancedStep, e.target.value)}
+                      className="mt-2"
+                      rows={4}
+                    />
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
