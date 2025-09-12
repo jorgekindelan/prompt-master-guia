@@ -52,50 +52,141 @@ const PromptBuilder = () => {
     { key: 'restrictions', title: 'Restricciones', icon: Shield, required: false }
   ];
 
-  // Options for brand voice and style
+  // Comprehensive options for brand voice and style
   const brandOptions = {
     role: [
-      'Experto en marketing digital',
-      'Consultor de negocios',
-      'Profesor universitario',
-      'Escritor profesional',
-      'Analista de datos',
-      'Especialista en comunicación'
+      'Experto en marketing digital con 15+ años de experiencia',
+      'Consultor estratégico de negocios especializado en transformación',
+      'Profesor universitario y investigador con doctorado',
+      'Escritor profesional y copywriter creativo',
+      'Analista de datos senior con experiencia en IA',
+      'Especialista en comunicación corporativa y relaciones públicas',
+      'Coach ejecutivo y mentor de liderazgo',
+      'Psicólogo organizacional especializado en comportamiento',
+      'Experto en experiencia de usuario (UX) y diseño centrado en humanos',
+      'Consultor en innovación y metodologías ágiles',
+      'Especialista en branding y posicionamiento estratégico',
+      'Experto en ventas B2B con track record comprobado',
+      'Investigador de mercado y tendencias de consumo',
+      'Especialista en transformación digital y tecnología',
+      'Experto en sostenibilidad y responsabilidad social corporativa',
+      'Consultor financiero y analista de inversiones',
+      'Especialista en recursos humanos y desarrollo del talento',
+      'Experto en e-commerce y marketing de performance',
+      'Consultor en procesos y optimización operacional',
+      'Experto en inteligencia artificial y machine learning'
     ],
     context: [
-      'Informar sobre un producto o servicio',
-      'Educar sobre un tema específico',
-      'Convencer o persuadir',
-      'Entretener y generar engagement',
-      'Resolver un problema',
-      'Anunciar cambios o novedades'
+      'Lanzamiento de producto revolucionario en mercado competitivo',
+      'Crisis de comunicación que requiere respuesta inmediata',
+      'Transformación digital de empresa tradicional',
+      'Expansión internacional a nuevos mercados emergentes',
+      'Fusión o adquisición empresarial compleja',
+      'Implementación de estrategia de sostenibilidad integral',
+      'Cambio generacional en el liderazgo de la compañía',
+      'Respuesta a disrupción tecnológica del sector',
+      'Recuperación post-crisis económica o sanitaria',
+      'Pivote estratégico del modelo de negocio',
+      'Innovación disruptiva que cambia las reglas del juego',
+      'Compliance con nuevas regulaciones gubernamentales',
+      'Optimización de procesos internos para eficiencia',
+      'Construcción de cultura corporativa en equipo remoto',
+      'Desarrollo de propuesta de valor diferenciada',
+      'Gestión de stakeholders en proyecto de alto impacto',
+      'Implementación de tecnologías emergentes (IA, blockchain)',
+      'Estrategia de retención de talento en mercado competitivo',
+      'Comunicación de resultados financieros desafiantes',
+      'Posicionamiento como líder de pensamiento en la industria'
     ],
     task: [
-      'Crear contenido informativo',
-      'Analizar datos o información', 
-      'Generar ideas creativas',
-      'Explicar conceptos complejos',
-      'Resolver un problema específico',
-      'Escribir texto persuasivo'
+      'Desarrollar estrategia integral de comunicación multicanal',
+      'Crear framework de toma de decisiones basado en datos',
+      'Diseñar metodología de innovación para equipos multidisciplinarios',
+      'Estructurar plan de transformación organizacional por fases',
+      'Elaborar análisis competitivo profundo con insights accionables',
+      'Construir narrativa de marca coherente y diferenciada',
+      'Desarrollar sistema de métricas y KPIs para seguimiento',
+      'Crear contenido educativo que simplifique conceptos complejos',
+      'Diseñar experiencia de cliente omnicanal y personalizada',
+      'Estructurar propuesta comercial irresistible y convincente',
+      'Elaborar roadmap tecnológico alineado con objetivos de negocio',
+      'Crear programa de desarrollo de liderazgo interno',
+      'Diseñar estrategia de posicionamiento en mercados emergentes',
+      'Desarrollar modelo de pricing dinámico y competitivo',
+      'Estructurar plan de gestión de crisis con protocolos claros',
+      'Crear sistema de feedback 360° para mejora continua',
+      'Elaborar business case sólido para inversión estratégica',
+      'Diseñar proceso de onboarding que maximice engagement',
+      'Desarrollar estrategia de partnerships estratégicos mutuamente beneficiosos',
+      'Crear framework de evaluación de riesgos integral'
     ],
     audience: [
-      'Clientes potenciales',
-      'Colaboradores internos',
-      'Público general',
-      'Profesionales del sector',
-      'Inversores y stakeholders',
-      'Usuarios técnicos',
-      'Estudiantes y aprendices'
+      'C-Level executives y board de directores',
+      'Inversionistas institucionales y venture capital',
+      'Middle management y líderes de equipos',
+      'Equipos técnicos especializados (developers, data scientists)',
+      'Clientes B2B enterprise con procesos de compra complejos',
+      'Consumidores millennials y Gen Z digitalmente nativos',
+      'Profesionales especializados en búsqueda de soluciones específicas',
+      'Reguladores gubernamentales y entidades de compliance',
+      'Medios de comunicación y periodistas especializados',
+      'Comunidad académica e investigadores del sector',
+      'Partners estratégicos y proveedores clave',
+      'Empleados actuales en proceso de cambio organizacional',
+      'Candidatos de alto potencial para reclutamiento',
+      'Influencers y thought leaders de la industria',
+      'Clientes existentes en riesgo de churn',
+      'Early adopters y usuarios beta de productos innovadores',
+      'Distribuidores y canal de ventas indirecto',
+      'Comunidades online y usuarios de redes sociales',
+      'Analistas financieros y de industria',
+      'Consultores externos y asesores especializados'
     ],
     format: [
-      'Directo al grano',
-      'Narrativo con storytelling',
-      'Explicativo con ejemplos',
-      'Emocional y persuasivo',
-      'Técnico y detallado',
-      'Conversacional y amigable',
-      'Formal y estructurado',
-      'Creativo y original'
+      'Ejecutivo y directo con bullets de acción inmediata',
+      'Narrativo con storytelling emocional y casos de éxito',
+      'Técnico con datos, métricas y evidencia cuantificable',
+      'Conversacional y cercano con tono humano auténtico',
+      'Académico con referencias, fuentes y marco teórico sólido',
+      'Inspiracional con visión de futuro y llamada a la acción',
+      'Estructurado con framework claro y pasos secuenciales',
+      'Creativo con metáforas, analogías y elementos visuales',
+      'Persuasivo con argumentos lógicos y emocionales balanceados',
+      'Consultivo posicionando como experto que asesora',
+      'Urgente transmitiendo necesidad de acción inmediata',
+      'Colaborativo invitando a co-creación y participación',
+      'Transparente con honestidad sobre desafíos y limitaciones',
+      'Visionario pintando escenario futuro deseable',
+      'Analítico con deep dive en causas raíz y soluciones',
+      'Empático reconociendo emociones y preocupaciones del audience',
+      'Innovador desafiando status quo con propuestas disruptivas',
+      'Pragmático enfocado en implementación y resultados concretos',
+      'Aspiracional conectando con valores y propósito superior',
+      'Educativo construyendo conocimiento paso a paso'
+    ],
+    examples: [
+      'Case study completo de transformación exitosa similar',
+      'Benchmarks de industria con mejores prácticas comprobadas',
+      'Testimonios específicos de clientes con resultados medibles',
+      'Analogías del mundo real que simplifican conceptos complejos',
+      'Escenarios hipotéticos con diferentes variables y outcomes',
+      'Frameworks probados de consultoras top tier (McKinsey, BCG)',
+      'Datos de investigación académica reciente y relevante',
+      'Comparaciones antes/después con métricas específicas',
+      'Ejemplos de competidores que han ejecutado estrategias similares',
+      'Modelos mentales y heurísticas de decisión efectivas'
+    ],
+    restrictions: [
+      'Máximo 500 palabras manteniendo densidad informativa alta',
+      'Evitar jerga técnica, usar lenguaje accesible para audiencia general',
+      'No mencionar competidores directos por restricciones legales',
+      'Mantener tono profesional evitando humor o informalidad excesiva',
+      'Incluir únicamente información verificable y basada en hechos',
+      'Evitar promesas o garantías que no puedan cumplirse legalmente',
+      'No revelar información confidencial o estratégica sensible',
+      'Mantener neutralidad política y cultural para audiencia global',
+      'Evitar sesgos de género, raza o cualquier forma de discriminación',
+      'No usar superlativOS exagerados que comprometan credibilidad'
     ]
   };
   
@@ -126,33 +217,62 @@ const PromptBuilder = () => {
 
   const generatePrompt = () => {
     let prompt = '';
+    let sections = [];
     
+    // Advanced prompt structure with multiple components
     if (promptData.role) {
-      prompt += `Actúa como ${promptData.role}.\n\n`;
+      const roleSection = `# ROL Y EXPERTISE\nActúa como ${promptData.role}. Aprovecha tu experiencia especializada, conocimiento profundo del sector y metodologías probadas para proporcionar insights valiosos y accionables.`;
+      sections.push(roleSection);
     }
     
     if (promptData.context) {
-      prompt += `Contexto: ${promptData.context}\n\n`;
+      const contextSection = `# CONTEXTO Y SITUACIÓN\n${promptData.context}\n\nConsidera las implicaciones estratégicas, los factores del entorno competitivo, las tendencias actuales del mercado y los desafíos específicos que enfrenta la organización en este contexto.`;
+      sections.push(contextSection);
     }
     
     if (promptData.task) {
-      prompt += `Tarea: ${promptData.task}\n\n`;
+      const taskSection = `# OBJETIVO Y TAREA PRINCIPAL\n${promptData.task}\n\nDesglosa la tarea en componentes específicos, identifica los entregables clave, establece criterios de éxito medibles y considera las dependencias e interrelaciones con otros procesos organizacionales.`;
+      sections.push(taskSection);
     }
     
     if (promptData.audience) {
-      prompt += `Audiencia objetivo: ${promptData.audience}\n\n`;
+      const audienceSection = `# AUDIENCIA OBJETIVO\nDirige tu respuesta específicamente a: ${promptData.audience}\n\nAdapta el nivel de detalle técnico, el lenguaje utilizado, los ejemplos relevantes y las referencias culturales para maximizar la resonancia y comprensión de esta audiencia específica. Considera sus motivaciones principales, preocupaciones típicas y procesos de toma de decisión.`;
+      sections.push(audienceSection);
     }
     
     if (promptData.format) {
-      prompt += `Estilo y formato: ${promptData.format}\n\n`;
+      const formatSection = `# ESTILO Y FORMATO REQUERIDO\nUtiliza un enfoque ${promptData.format}\n\nMantén consistencia en el tono a lo largo de toda la respuesta, estructura la información de manera lógica y progresiva, utiliza transiciones fluidas entre conceptos, y asegúrate de que cada párrafo agregue valor único al mensaje general.`;
+      sections.push(formatSection);
     }
     
     if (promptData.examples) {
-      prompt += `Ejemplos de referencia: ${promptData.examples}\n\n`;
+      const examplesSection = `# EJEMPLOS Y REFERENCIAS\nIncorpora estos ejemplos como referencia: ${promptData.examples}\n\nUtiliza estos ejemplos para ilustrar puntos clave, establecer benchmarks de calidad, demostrar aplicación práctica de conceptos teóricos y proporcionar evidencia concreta que respalde tus recomendaciones.`;
+      sections.push(examplesSection);
     }
     
     if (promptData.restrictions) {
-      prompt += `Restricciones: ${promptData.restrictions}\n\n`;
+      const restrictionsSection = `# RESTRICCIONES Y CONSIDERACIONES\n${promptData.restrictions}\n\nAdhiérete estrictamente a estas limitaciones mientras maximizas el valor y la utilidad de la respuesta dentro de los parámetros establecidos.`;
+      sections.push(restrictionsSection);
+    }
+
+    // Additional enhancement sections for more complex prompts
+    const enhancementSections = [];
+    
+    if (sections.length > 0) {
+      enhancementSections.push(`# METODOLOGÍA Y ENFOQUE\nEstructura tu respuesta utilizando un framework sistemático que incluya:\n- Análisis de la situación actual\n- Identificación de oportunidades y desafíos\n- Desarrollo de soluciones o recomendaciones específicas\n- Plan de implementación con pasos concretos\n- Métricas de éxito y seguimiento`);
+      
+      enhancementSections.push(`# CRITERIOS DE CALIDAD\nAsegúrate de que tu respuesta:\n- Proporcione valor inmediato y accionable\n- Esté respaldada por evidencia o mejores prácticas\n- Considere múltiples perspectivas y escenarios\n- Incluya consideraciones de riesgo y mitigación\n- Mantenga un balance entre profundidad y claridad`);
+      
+      enhancementSections.push(`# ESTRUCTURA DE ENTREGA\nOrganiza tu respuesta con:\n1. Resumen ejecutivo con puntos clave\n2. Desarrollo detallado con argumentación sólida\n3. Recomendaciones específicas y priorizadas\n4. Próximos pasos concretos y timeline\n5. Conclusión que refuerce el valor propuesto`);
+    }
+    
+    // Combine all sections
+    const allSections = [...sections, ...enhancementSections];
+    prompt = allSections.join('\n\n');
+    
+    // Add final instructions for completeness
+    if (prompt) {
+      prompt += `\n\n# INSTRUCCIONES FINALES\nProporciona una respuesta completa, bien estructurada y de alta calidad que demuestre expertise profesional y agregue valor significativo para la audiencia objetivo. Utiliza ejemplos específicos cuando sea apropiado y asegúrate de que cada sección contribuya al objetivo general establecido.`;
     }
 
     setGeneratedPrompt(prompt.trim());
@@ -512,26 +632,26 @@ const PromptBuilder = () => {
 // Helper functions
 function getStepDescription(step: Step): string {
   const descriptions = {
-    role: 'Define qué experto o personalidad debe adoptar la IA para responder',
-    context: 'Proporciona información de fondo y situación específica',
-    task: 'Especifica qué acción principal debe realizar la IA',
-    audience: 'Define para quién será la respuesta (opcional pero recomendado)',
-    format: 'Indica el tono, estilo y cómo quieres estructurar la respuesta',
-    examples: 'Proporciona ejemplos del tipo de respuesta que esperas',
-    restrictions: 'Establece límites y reglas que la IA debe seguir'
+    role: 'Define qué experto, profesional o personalidad específica debe adoptar la IA. Esto incluye su nivel de expertise, años de experiencia, especialización y metodologías que domina.',
+    context: 'Proporciona información detallada de fondo, situación actual del mercado, desafíos específicos del sector, antecedentes históricos relevantes y factores del entorno que influyen en la situación.',
+    task: 'Especifica con precisión qué acción principal, deliverable o resultado debe generar la IA. Define el alcance, profundidad esperada y componentes específicos que debe incluir la respuesta.',
+    audience: 'Define detalladamente para quién será la respuesta, incluyendo su nivel de conocimiento técnico, motivaciones principales, procesos de decisión, preocupaciones típicas y contexto organizacional.',
+    format: 'Indica el tono específico, estilo narrativo, estructura preferida, nivel de formalidad, uso de ejemplos, densidad informativa y cómo quieres que se organice y presente la información.',
+    examples: 'Proporciona referencias específicas, casos de estudio, benchmarks de industria, testimonios, frameworks comprobados o cualquier ejemplo concreto que sirva como guía para la calidad y estilo esperado.',
+    restrictions: 'Establece límites claros, consideraciones legales, restricciones de confidencialidad, límites de extensión, temas a evitar y cualquier parámetro que la IA debe respetar estrictamente.'
   };
   return descriptions[step];
 }
 
 function getStepPlaceholder(step: Step): string {
   const placeholders = {
-    role: 'Ej: Experto en marketing digital con 10 años de experiencia en e-commerce',
-    context: 'Ej: Mi empresa es una startup de tecnología que vende productos eco-friendly...',
-    task: 'Ej: Analiza la estrategia de contenidos y sugiere 5 mejoras específicas',
-    audience: 'Ej: Empresarios jóvenes de 25-40 años interesados en sostenibilidad',
-    format: 'Ej: Tono profesional pero cercano, lista numerada con explicación de 2-3 líneas por punto',
-    examples: 'Ej: Como este estilo: "1. Optimización SEO - Mejora la visibilidad..."',
-    restrictions: 'Ej: No exceder 300 palabras, usar tono profesional pero cercano'
+    role: 'Ej: Consultor senior de McKinsey especializado en transformación digital con 15 años de experiencia ayudando a Fortune 500 en la implementación de estrategias tecnológicas disruptivas, con expertise particular en change management y adopción de IA empresarial.',
+    context: 'Ej: Mi empresa es una compañía manufacturera tradicional de 150 años que enfrenta disrupción digital acelerada por competidores tech-enabled. Hemos perdido 15% market share en 24 meses y nuestros procesos actuales son 40% menos eficientes que benchmarks digitales...',
+    task: 'Ej: Desarrollar una hoja de ruta integral de transformación digital de 36 meses que incluya: diagnóstico actual detallado, identificación de quick wins, roadmap de tecnologías prioritarias, plan de change management, estructura de governance, métricas de seguimiento y business case financiero robusto.',
+    audience: 'Ej: Board de directores compuesto por ejecutivos de 55+ años con background tradicional, alta aversión al riesgo, enfoque ROI-driven, preocupados por job displacement y necesidad de aprobar inversión de $50M+ con justificación sólida ante shareholders conservadores.',
+    format: 'Ej: Presentación ejecutiva estilo consultoría premium con: resumen ejecutivo de 2 minutos, análisis estructurado con framework MECE, datos cuantitativos que respalden cada argumento, roadmap visual claro, business case con NPV/IRR, y call-to-action específico con next steps inmediatos.',
+    examples: 'Ej: Caso de transformación exitosa de General Electric bajo Jeffrey Immelt, framework de transformación digital de BCG, metodología de adoption de Salesforce, benchmarks de McKinsey Global Institute sobre ROI de IA empresarial, y testimonios específicos de CEOs que lideraron transformaciones similares.',
+    restrictions: 'Ej: Máximo 15 slides + anexos, evitar mencionar competidores directos por NDA, mantener tono conservador apropiado para cultura corporativa tradicional, incluir únicamente tecnologías maduras con track record comprobado, no exceder budget preliminar de $50M, considerar constraints regulatorios del sector.'
   };
   return placeholders[step];
 }
