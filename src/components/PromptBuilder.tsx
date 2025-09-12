@@ -4,21 +4,38 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Wand2, RefreshCw, Settings, ChevronLeft, ChevronRight, Play, User, FileText, Target, Users, Layout, BookOpen, Shield, Code, FileCode, Settings2, Heart, Zap, Star, Lightbulb, MessageCircle, Volume2, Palette } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Copy, Wand2, RefreshCw, ChevronLeft, ChevronRight, User, Target, Users, Volume2, Palette, BookOpen, Shield, MessageCircle, FileText, Settings2, Globe, Eye, Sparkles, ArrowLeft, ArrowRight, RotateCcw, Brain, Lightbulb } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 type Mode = 'initial' | 'simple' | 'advanced';
-type Step = 'role' | 'context' | 'task' | 'audience' | 'format' | 'examples' | 'restrictions';
+type SimpleStep = 'objective' | 'audience' | 'tone' | 'style' | 'detail' | 'restrictions' | 'format';
+type AdvancedStep = 'objective' | 'context' | 'audience' | 'tone' | 'style' | 'detail' | 'structure' | 'restrictions' | 'keywords' | 'examples' | 'format' | 'additional';
 type OutputFormat = 'text' | 'html' | 'json';
 
-interface PromptData {
-  role: string;
-  context: string;
-  task: string;
+interface SimplePromptData {
+  objective: string;
   audience: string;
-  format: string;
-  examples: string;
+  tone: string;
+  style: string;
+  detail: string;
   restrictions: string;
+  format: string;
+}
+
+interface AdvancedPromptData {
+  objective: string;
+  context: string;
+  audience: string;
+  tone: string;
+  style: string;
+  detail: string;
+  structure: string;
+  restrictions: string;
+  keywords: string;
+  examples: string;
+  format: string;
+  additional: string;
 }
 
 const PromptBuilder = () => {
@@ -26,79 +43,244 @@ const PromptBuilder = () => {
   
   // Main state
   const [mode, setMode] = useState<Mode>('initial');
-  const [currentStep, setCurrentStep] = useState<Step>('role');
+  const [currentSimpleStep, setCurrentSimpleStep] = useState<SimpleStep>('objective');
+  const [currentAdvancedStep, setCurrentAdvancedStep] = useState<AdvancedStep>('objective');
   const [outputFormat, setOutputFormat] = useState<OutputFormat>('text');
   const [generatedPrompt, setGeneratedPrompt] = useState<string>("");
   
-  // Prompt data
-  const [promptData, setPromptData] = useState<PromptData>({
-    role: '',
-    context: '',
-    task: '',
+  // Prompt data for both modes
+  const [simpleData, setSimpleData] = useState<SimplePromptData>({
+    objective: '',
     audience: '',
-    format: '',
-    examples: '',
-    restrictions: ''
+    tone: '',
+    style: '',
+    detail: '',
+    restrictions: '',
+    format: ''
   });
 
-  // Los 7 pilares del prompt engineering
-  const steps: { key: Step; title: string; icon: any; required: boolean }[] = [
-    { key: 'role', title: 'Rol', icon: User, required: false },
-    { key: 'context', title: 'Contexto', icon: MessageCircle, required: false },
-    { key: 'task', title: 'Tarea', icon: Target, required: false },
-    { key: 'audience', title: 'Audiencia', icon: Users, required: false },
-    { key: 'format', title: 'Formato', icon: Palette, required: false },
-    { key: 'examples', title: 'Ejemplos', icon: BookOpen, required: false },
-    { key: 'restrictions', title: 'Restricciones', icon: Shield, required: false }
+  const [advancedData, setAdvancedData] = useState<AdvancedPromptData>({
+    objective: '',
+    context: '',
+    audience: '',
+    tone: '',
+    style: '',
+    detail: '',
+    structure: '',
+    restrictions: '',
+    keywords: '',
+    examples: '',
+    format: '',
+    additional: ''
+  });
+
+  // Steps configuration for both modes
+  const simpleSteps: { key: SimpleStep; title: string; icon: any; explanation: string; example: string }[] = [
+    {
+      key: 'objective',
+      title: 'Objetivo del prompt',
+      icon: Target,
+      explanation: 'Define el propósito principal de tu prompt.',
+      example: 'Quiero que el texto convenza a potenciales clientes para contratar nuestro servicio.'
+    },
+    {
+      key: 'audience',
+      title: 'Audiencia',
+      icon: Users,
+      explanation: 'Selecciona a quién va dirigido el mensaje.',
+      example: 'El mensaje debe estar dirigido a jóvenes profesionales interesados en innovación tecnológica.'
+    },
+    {
+      key: 'tone',
+      title: 'Tono de voz',
+      icon: Volume2,
+      explanation: 'Define cómo debe sonar el mensaje.',
+      example: 'El texto debe sonar inspirador y optimista.'
+    },
+    {
+      key: 'style',
+      title: 'Estilo narrativo',
+      icon: Palette,
+      explanation: 'Indica el estilo de redacción que prefieres.',
+      example: 'Quiero un estilo narrativo tipo storytelling, con una breve historia.'
+    },
+    {
+      key: 'detail',
+      title: 'Nivel de detalle',
+      icon: Eye,
+      explanation: 'Selecciona la profundidad del contenido.',
+      example: 'Debe ser un mensaje breve, como un post corto en LinkedIn.'
+    },
+    {
+      key: 'restrictions',
+      title: 'Restricciones',
+      icon: Shield,
+      explanation: 'Indica lo que NO quieres que aparezca.',
+      example: 'No quiero que se usen tecnicismos ni un tono excesivamente formal.'
+    },
+    {
+      key: 'format',
+      title: 'Formato de salida',
+      icon: FileText,
+      explanation: 'Selecciona el formato de salida del prompt.',
+      example: 'El resultado debe estar en formato de artículo web con encabezados H2.'
+    }
   ];
 
-  // Comprehensive options for brand voice and style
-  const brandOptions = {
-    role: [
-      'Experto en marketing digital con 15+ años de experiencia',
-      'Consultor estratégico de negocios especializado en transformación',
-      'Profesor universitario y investigador con doctorado',
-      'Escritor profesional y copywriter creativo',
-      'Analista de datos senior con experiencia en IA',
-      'Especialista en comunicación corporativa y relaciones públicas',
-      'Coach ejecutivo y mentor de liderazgo',
-      'Psicólogo organizacional especializado en comportamiento',
-      'Experto en experiencia de usuario (UX) y diseño centrado en humanos',
-      'Consultor en innovación y metodologías ágiles',
-      'Especialista en branding y posicionamiento estratégico',
-      'Experto en ventas B2B con track record comprobado',
-      'Investigador de mercado y tendencias de consumo',
-      'Especialista en transformación digital y tecnología',
-      'Experto en sostenibilidad y responsabilidad social corporativa',
-      'Consultor financiero y analista de inversiones',
-      'Especialista en recursos humanos y desarrollo del talento',
-      'Experto en e-commerce y marketing de performance',
-      'Consultor en procesos y optimización operacional',
-      'Experto en inteligencia artificial y machine learning'
+  const advancedSteps: { key: AdvancedStep; title: string; icon: any; explanation: string; example: string }[] = [
+    {
+      key: 'objective',
+      title: 'Objetivo principal',
+      icon: Target,
+      explanation: 'Define el propósito exacto del prompt.',
+      example: 'Quiero que el prompt genere un artículo educativo que explique los beneficios de la IA en el sector legal.'
+    },
+    {
+      key: 'context',
+      title: 'Contexto detallado',
+      icon: MessageCircle,
+      explanation: 'Aporta información de fondo o el escenario.',
+      example: 'Este prompt será usado para crear una newsletter sobre tendencias en IA dirigida a directivos.'
+    },
+    {
+      key: 'audience',
+      title: 'Audiencia segmentada',
+      icon: Users,
+      explanation: 'Selecciona el público objetivo en detalle.',
+      example: 'Está dirigido a inversores interesados en proyectos de innovación tecnológica.'
+    },
+    {
+      key: 'tone',
+      title: 'Tono de voz',
+      icon: Volume2,
+      explanation: 'Elige el tono o combina varios.',
+      example: 'El texto debe sonar profesional y confiable, pero también inspirador.'
+    },
+    {
+      key: 'style',
+      title: 'Estilo narrativo',
+      icon: Palette,
+      explanation: 'Selecciona la manera en que debe estar escrito.',
+      example: 'Quiero un estilo técnico, con ejemplos y comparaciones claras.'
+    },
+    {
+      key: 'detail',
+      title: 'Nivel de detalle',
+      icon: Eye,
+      explanation: 'Selecciona la profundidad de la respuesta.',
+      example: 'Debe ser un informe extenso con datos técnicos.'
+    },
+    {
+      key: 'structure',
+      title: 'Estructura del mensaje',
+      icon: Settings2,
+      explanation: 'Organiza cómo debe presentarse el contenido.',
+      example: 'Debe comenzar con una introducción, luego desarrollar el tema y terminar con una llamada a la acción.'
+    },
+    {
+      key: 'restrictions',
+      title: 'Restricciones avanzadas',
+      icon: Shield,
+      explanation: 'Define lo que debe evitarse.',
+      example: 'Evitar lenguaje negativo o términos técnicos demasiado complejos.'
+    },
+    {
+      key: 'keywords',
+      title: 'Palabras clave',
+      icon: Lightbulb,
+      explanation: 'Indica conceptos que deben aparecer.',
+      example: 'El texto debe incluir las palabras: innovación, confianza, crecimiento.'
+    },
+    {
+      key: 'examples',
+      title: 'Ejemplos de entrada/salida',
+      icon: BookOpen,
+      explanation: 'Proporciona ejemplos para guiar a la IA.',
+      example: 'Input: "Explica qué es la IA generativa en 3 frases sencillas." Output esperado: "La IA generativa crea contenido original como texto o imágenes..."'
+    },
+    {
+      key: 'format',
+      title: 'Formato de salida dinámico',
+      icon: FileText,
+      explanation: 'Define el formato específico de salida.',
+      example: 'Genera un post formal de 200 palabras para LinkedIn con emojis limitados.'
+    },
+    {
+      key: 'additional',
+      title: 'Opciones adicionales',
+      icon: Sparkles,
+      explanation: 'Configura extras que ajusten aún más el resultado.',
+      example: 'Idioma español, incluir emojis moderadamente, tono semiformal, máximo 300 palabras.'
+    }
+  ];
+
+  // Options for simple mode
+  const simpleOptions = {
+    objective: [
+      'Informar sobre un tema específico',
+      'Persuadir y convencer a la audiencia',
+      'Educar paso a paso sobre un concepto',
+      'Entretener con contenido atractivo',
+      'Inspirar y motivar a la acción',
+      'Resolver dudas y preguntas frecuentes',
+      'Generar confianza en la marca'
     ],
-    context: [
-      'Lanzamiento de producto revolucionario en mercado competitivo',
-      'Crisis de comunicación que requiere respuesta inmediata',
-      'Transformación digital de empresa tradicional',
-      'Expansión internacional a nuevos mercados emergentes',
-      'Fusión o adquisición empresarial compleja',
-      'Implementación de estrategia de sostenibilidad integral',
-      'Cambio generacional en el liderazgo de la compañía',
-      'Respuesta a disrupción tecnológica del sector',
-      'Recuperación post-crisis económica o sanitaria',
-      'Pivote estratégico del modelo de negocio',
-      'Innovación disruptiva que cambia las reglas del juego',
-      'Compliance con nuevas regulaciones gubernamentales',
-      'Optimización de procesos internos para eficiencia',
-      'Construcción de cultura corporativa en equipo remoto',
-      'Desarrollo de propuesta de valor diferenciada',
-      'Gestión de stakeholders en proyecto de alto impacto',
-      'Implementación de tecnologías emergentes (IA, blockchain)',
-      'Estrategia de retención de talento en mercado competitivo',
-      'Comunicación de resultados financieros desafiantes',
-      'Posicionamiento como líder de pensamiento en la industria'
+    audience: [
+      'Clientes potenciales interesados en el producto',
+      'Inversores que evalúan oportunidades',
+      'Empleados internos de la empresa',
+      'Público general sin conocimiento técnico',
+      'Periodistas y medios especializados',
+      'Expertos técnicos del sector',
+      'Jóvenes profesionales digitales'
     ],
-    task: [
+    tone: [
+      'Profesional y corporativo',
+      'Cercano y humano',
+      'Inspirador y motivacional',
+      'Innovador y disruptivo',
+      'Confiable y transparente',
+      'Dinámico y energético',
+      'Cálido y empático'
+    ],
+    style: [
+      'Directo y ejecutivo',
+      'Explicativo con detalles',
+      'Storytelling narrativo',
+      'Técnico especializado',
+      'Emocional y persuasivo',
+      'Conversacional amigable',
+      'Estructurado con bullets'
+    ],
+    detail: [
+      'Breve (menos de 100 palabras)',
+      'Intermedio (100-300 palabras)',
+      'Profundo (más de 300 palabras)',
+      'Extenso con análisis detallado'
+    ],
+    restrictions: [
+      'Evitar jerga técnica compleja',
+      'No mencionar competidores directos',
+      'Mantener tono neutral políticamente',
+      'Evitar promesas exageradas',
+      'No incluir información confidencial',
+      'Evitar humor o sarcasmo',
+      'Mantener brevedad máxima'
+    ],
+    format: [
+      'Post de redes sociales',
+      'Artículo de blog corporativo',
+      'Email marketing directo',
+      'Presentación ejecutiva',
+      'Informe técnico formal',
+      'Newsletter informativa',
+      'Comunicado de prensa'
+    ]
+  };
+
+  // Options for advanced mode
+  const advancedOptions = {
+    objective: [
       'Desarrollar estrategia integral de comunicación multicanal',
       'Crear framework de toma de decisiones basado en datos',
       'Diseñar metodología de innovación para equipos multidisciplinarios',
@@ -108,73 +290,75 @@ const PromptBuilder = () => {
       'Desarrollar sistema de métricas y KPIs para seguimiento',
       'Crear contenido educativo que simplifique conceptos complejos',
       'Diseñar experiencia de cliente omnicanal y personalizada',
-      'Estructurar propuesta comercial irresistible y convincente',
-      'Elaborar roadmap tecnológico alineado con objetivos de negocio',
-      'Crear programa de desarrollo de liderazgo interno',
-      'Diseñar estrategia de posicionamiento en mercados emergentes',
-      'Desarrollar modelo de pricing dinámico y competitivo',
-      'Estructurar plan de gestión de crisis con protocolos claros',
-      'Crear sistema de feedback 360° para mejora continua',
-      'Elaborar business case sólido para inversión estratégica',
-      'Diseñar proceso de onboarding que maximice engagement',
-      'Desarrollar estrategia de partnerships estratégicos mutuamente beneficiosos',
-      'Crear framework de evaluación de riesgos integral'
+      'Estructurar propuesta comercial irresistible y convincente'
+    ],
+    context: [
+      'Lanzamiento de producto revolucionario en mercado competitivo',
+      'Crisis de comunicación que requiere respuesta inmediata y estratégica',
+      'Transformación digital de empresa tradicional con resistencia al cambio',
+      'Expansión internacional a mercados emergentes con culturas diferentes',
+      'Fusión o adquisición empresarial compleja con múltiples stakeholders',
+      'Implementación de estrategia de sostenibilidad integral',
+      'Cambio generacional en liderazgo con nuevas metodologías',
+      'Respuesta a disrupción tecnológica que afecta todo el sector',
+      'Recuperación post-crisis con necesidad de rebuilding confianza',
+      'Pivote estratégico del modelo de negocio hacia nuevas oportunidades'
     ],
     audience: [
-      'C-Level executives y board de directores',
-      'Inversionistas institucionales y venture capital',
-      'Middle management y líderes de equipos',
-      'Equipos técnicos especializados (developers, data scientists)',
-      'Clientes B2B enterprise con procesos de compra complejos',
-      'Consumidores millennials y Gen Z digitalmente nativos',
+      'C-Level executives y board de directores con poder de decisión',
+      'Inversionistas institucionales y venture capital con criterios específicos',
+      'Middle management y líderes de equipos en proceso de transformación',
+      'Equipos técnicos especializados (developers, data scientists, ingenieros)',
+      'Clientes B2B enterprise con procesos de compra complejos y largos',
+      'Consumidores millennials y Gen Z digitalmente nativos y exigentes',
       'Profesionales especializados en búsqueda de soluciones específicas',
       'Reguladores gubernamentales y entidades de compliance',
-      'Medios de comunicación y periodistas especializados',
-      'Comunidad académica e investigadores del sector',
-      'Partners estratégicos y proveedores clave',
-      'Empleados actuales en proceso de cambio organizacional',
-      'Candidatos de alto potencial para reclutamiento',
-      'Influencers y thought leaders de la industria',
-      'Clientes existentes en riesgo de churn',
-      'Early adopters y usuarios beta de productos innovadores',
-      'Distribuidores y canal de ventas indirecto',
-      'Comunidades online y usuarios de redes sociales',
-      'Analistas financieros y de industria',
-      'Consultores externos y asesores especializados'
+      'Medios de comunicación y periodistas especializados del sector',
+      'Comunidad académica e investigadores con rigor científico'
     ],
-    format: [
-      'Ejecutivo y directo con bullets de acción inmediata',
-      'Narrativo con storytelling emocional y casos de éxito',
-      'Técnico con datos, métricas y evidencia cuantificable',
-      'Conversacional y cercano con tono humano auténtico',
-      'Académico con referencias, fuentes y marco teórico sólido',
-      'Inspiracional con visión de futuro y llamada a la acción',
-      'Estructurado con framework claro y pasos secuenciales',
-      'Creativo con metáforas, analogías y elementos visuales',
-      'Persuasivo con argumentos lógicos y emocionales balanceados',
-      'Consultivo posicionando como experto que asesora',
-      'Urgente transmitiendo necesidad de acción inmediata',
-      'Colaborativo invitando a co-creación y participación',
-      'Transparente con honestidad sobre desafíos y limitaciones',
-      'Visionario pintando escenario futuro deseable',
-      'Analítico con deep dive en causas raíz y soluciones',
-      'Empático reconociendo emociones y preocupaciones del audience',
-      'Innovador desafiando status quo con propuestas disruptivas',
-      'Pragmático enfocado en implementación y resultados concretos',
+    tone: [
+      'Profesional ejecutivo con autoridad y credibilidad',
+      'Cercano y humano manteniendo profesionalismo',
+      'Innovador desafiando el status quo con propuestas disruptivas',
+      'Inspirador pintando visión de futuro deseable y alcanzable',
+      'Optimista transmitiendo confianza en resultados positivos',
+      'Dinámico y energético generando momentum y urgencia',
+      'Confiable estableciendo expertise y track record comprobado',
+      'Transparente admitiendo limitaciones pero ofreciendo soluciones',
+      'Disruptivo cuestionando paradigmas existentes',
       'Aspiracional conectando con valores y propósito superior',
-      'Educativo construyendo conocimiento paso a paso'
+      'Cálido estableciendo conexión emocional auténtica',
+      'Claro eliminando ambigüedades y malentendidos'
     ],
-    examples: [
-      'Case study completo de transformación exitosa similar',
-      'Benchmarks de industria con mejores prácticas comprobadas',
-      'Testimonios específicos de clientes con resultados medibles',
-      'Analogías del mundo real que simplifican conceptos complejos',
-      'Escenarios hipotéticos con diferentes variables y outcomes',
-      'Frameworks probados de consultoras top tier (McKinsey, BCG)',
-      'Datos de investigación académica reciente y relevante',
-      'Comparaciones antes/después con métricas específicas',
-      'Ejemplos de competidores que han ejecutado estrategias similares',
-      'Modelos mentales y heurísticas de decisión efectivas'
+    style: [
+      'Formal institucional con protocolos establecidos',
+      'Storytelling emocional con narrativas que conecten',
+      'Técnico especializado con datos y evidencia cuantificable',
+      'Conversacional consultivo posicionando como experto asesor',
+      'Emocional apelando a motivaciones profundas',
+      'Creativo utilizando metáforas y analogías poderosas',
+      'Educativo construyendo conocimiento paso a paso',
+      'Argumentativo con lógica sólida y evidencia contundente',
+      'Analítico con deep dive en causas raíz y soluciones',
+      'Comparativo estableciendo benchmarks y diferenciación',
+      'Persuasivo balanceando lógica y emoción estratégicamente',
+      'Minimalista eliminando lo superfluo para máximo impacto'
+    ],
+    detail: [
+      'Muy resumido para executives con tiempo limitado',
+      'Medio con balance entre profundidad y accesibilidad',
+      'Extenso para análisis completo y toma de decisiones complejas',
+      'Técnico detallado para implementación y ejecución específica',
+      'Estratégico de alto nivel para visión y dirección',
+      'Operacional con pasos concretos y medibles'
+    ],
+    structure: [
+      'Introducción ejecutiva - Desarrollo - Conclusiones - Llamada a la acción',
+      'Problema - Análisis - Solución - Implementación - Resultados esperados',
+      'Contexto - Oportunidad - Propuesta - Beneficios - Próximos pasos',
+      'Situación actual - Visión futura - Roadmap - Recursos necesarios',
+      'Desafío - Metodología - Casos de éxito - Aplicación específica',
+      'Framework conceptual - Componentes - Interrelaciones - Métricas'
     ],
     restrictions: [
       'Máximo 500 palabras manteniendo densidad informativa alta',
@@ -186,98 +370,192 @@ const PromptBuilder = () => {
       'No revelar información confidencial o estratégica sensible',
       'Mantener neutralidad política y cultural para audiencia global',
       'Evitar sesgos de género, raza o cualquier forma de discriminación',
-      'No usar superlativOS exagerados que comprometan credibilidad'
+      'No usar superlativos exagerados que comprometan credibilidad'
+    ],
+    keywords: [
+      'Innovación, transformación, liderazgo, excelencia, crecimiento',
+      'Eficiencia, optimización, resultados, performance, ROI',
+      'Experiencia, calidad, confianza, expertise, soluciones',
+      'Futuro, tendencias, disrupción, oportunidades, evolución',
+      'Estrategia, implementación, metodología, framework, sistema',
+      'Colaboración, sinergia, partnership, ecosistema, comunidad'
+    ],
+    examples: [
+      'Case study completo de transformación exitosa similar con métricas específicas',
+      'Benchmarks de industria con mejores prácticas comprobadas y resultados',
+      'Testimonios específicos de clientes con resultados medibles y verificables',
+      'Analogías del mundo real que simplifiquen conceptos complejos',
+      'Escenarios hipotéticos con diferentes variables y outcomes posibles',
+      'Frameworks probados de consultoras top tier (McKinsey, BCG, Bain)',
+      'Datos de investigación académica reciente y peer-reviewed',
+      'Comparaciones antes/después con métricas específicas y timeline',
+      'Ejemplos de competidores exitosos con análisis de factores clave',
+      'Modelos mentales y heurísticas de decisión probadas'
+    ],
+    format: [
+      'Artículo de blog SEO-optimizado con estructura H1-H6',
+      'Email de newsletter con subject line y preview text',
+      'Post de LinkedIn con hooks y hashtags estratégicos',
+      'Presentación ejecutiva con talking points clave',
+      'Informe técnico con abstract y conclusiones',
+      'Comunicado de prensa con titular y quotes',
+      'Whitepaper académico con referencias y metodología',
+      'Case study con problema-solución-resultados',
+      'Propuesta comercial con valor y diferenciación',
+      'Script de video con timing y llamadas a la acción'
+    ],
+    additional: [
+      'Español neutro internacional, emojis estratégicos, tono semiformal',
+      'Inglés americano, sin emojis, máxima formalidad corporativa',
+      'Bilingüe español-inglés, terminología técnica, audiencia global',
+      'Lenguaje inclusivo, diversidad cultural, sensibilidad social',
+      'Optimizado para SEO con keywords específicas del sector',
+      'Formato mobile-first, scannable, bullets y párrafos cortos'
     ]
   };
-  
-  const updatePromptData = (key: keyof PromptData, value: string) => {
-    setPromptData(prev => ({ ...prev, [key]: value }));
-  };
 
-  const nextStep = () => {
-    const currentIndex = steps.findIndex(step => step.key === currentStep);
-    if (currentIndex < steps.length - 1) {
-      setCurrentStep(steps[currentIndex + 1].key);
+  // Navigation functions
+  const nextSimpleStep = () => {
+    const currentIndex = simpleSteps.findIndex(step => step.key === currentSimpleStep);
+    if (currentIndex < simpleSteps.length - 1) {
+      setCurrentSimpleStep(simpleSteps[currentIndex + 1].key);
     } else {
-      generatePrompt();
+      generateSimplePrompt();
     }
   };
 
-  const prevStep = () => {
-    const currentIndex = steps.findIndex(step => step.key === currentStep);
+  const prevSimpleStep = () => {
+    const currentIndex = simpleSteps.findIndex(step => step.key === currentSimpleStep);
     if (currentIndex > 0) {
-      setCurrentStep(steps[currentIndex - 1].key);
+      setCurrentSimpleStep(simpleSteps[currentIndex - 1].key);
     }
   };
 
-  const canProceed = () => {
-    // Todos los pasos son opcionales
-    return true;
+  const nextAdvancedStep = () => {
+    const currentIndex = advancedSteps.findIndex(step => step.key === currentAdvancedStep);
+    if (currentIndex < advancedSteps.length - 1) {
+      setCurrentAdvancedStep(advancedSteps[currentIndex + 1].key);
+    } else {
+      generateAdvancedPrompt();
+    }
   };
 
-  const generatePrompt = () => {
-    let prompt = '';
-    let sections = [];
-    
-    // Advanced prompt structure with multiple components
-    if (promptData.role) {
-      const roleSection = `# ROL Y EXPERTISE\nActúa como ${promptData.role}. Aprovecha tu experiencia especializada, conocimiento profundo del sector y metodologías probadas para proporcionar insights valiosos y accionables.`;
-      sections.push(roleSection);
+  const prevAdvancedStep = () => {
+    const currentIndex = advancedSteps.findIndex(step => step.key === currentAdvancedStep);
+    if (currentIndex > 0) {
+      setCurrentAdvancedStep(advancedSteps[currentIndex - 1].key);
     }
-    
-    if (promptData.context) {
-      const contextSection = `# CONTEXTO Y SITUACIÓN\n${promptData.context}\n\nConsidera las implicaciones estratégicas, los factores del entorno competitivo, las tendencias actuales del mercado y los desafíos específicos que enfrenta la organización en este contexto.`;
-      sections.push(contextSection);
-    }
-    
-    if (promptData.task) {
-      const taskSection = `# OBJETIVO Y TAREA PRINCIPAL\n${promptData.task}\n\nDesglosa la tarea en componentes específicos, identifica los entregables clave, establece criterios de éxito medibles y considera las dependencias e interrelaciones con otros procesos organizacionales.`;
-      sections.push(taskSection);
-    }
-    
-    if (promptData.audience) {
-      const audienceSection = `# AUDIENCIA OBJETIVO\nDirige tu respuesta específicamente a: ${promptData.audience}\n\nAdapta el nivel de detalle técnico, el lenguaje utilizado, los ejemplos relevantes y las referencias culturales para maximizar la resonancia y comprensión de esta audiencia específica. Considera sus motivaciones principales, preocupaciones típicas y procesos de toma de decisión.`;
-      sections.push(audienceSection);
-    }
-    
-    if (promptData.format) {
-      const formatSection = `# ESTILO Y FORMATO REQUERIDO\nUtiliza un enfoque ${promptData.format}\n\nMantén consistencia en el tono a lo largo de toda la respuesta, estructura la información de manera lógica y progresiva, utiliza transiciones fluidas entre conceptos, y asegúrate de que cada párrafo agregue valor único al mensaje general.`;
-      sections.push(formatSection);
-    }
-    
-    if (promptData.examples) {
-      const examplesSection = `# EJEMPLOS Y REFERENCIAS\nIncorpora estos ejemplos como referencia: ${promptData.examples}\n\nUtiliza estos ejemplos para ilustrar puntos clave, establecer benchmarks de calidad, demostrar aplicación práctica de conceptos teóricos y proporcionar evidencia concreta que respalde tus recomendaciones.`;
-      sections.push(examplesSection);
-    }
-    
-    if (promptData.restrictions) {
-      const restrictionsSection = `# RESTRICCIONES Y CONSIDERACIONES\n${promptData.restrictions}\n\nAdhiérete estrictamente a estas limitaciones mientras maximizas el valor y la utilidad de la respuesta dentro de los parámetros establecidos.`;
-      sections.push(restrictionsSection);
-    }
-
-    // Additional enhancement sections for more complex prompts
-    const enhancementSections = [];
-    
-    if (sections.length > 0) {
-      enhancementSections.push(`# METODOLOGÍA Y ENFOQUE\nEstructura tu respuesta utilizando un framework sistemático que incluya:\n- Análisis de la situación actual\n- Identificación de oportunidades y desafíos\n- Desarrollo de soluciones o recomendaciones específicas\n- Plan de implementación con pasos concretos\n- Métricas de éxito y seguimiento`);
-      
-      enhancementSections.push(`# CRITERIOS DE CALIDAD\nAsegúrate de que tu respuesta:\n- Proporcione valor inmediato y accionable\n- Esté respaldada por evidencia o mejores prácticas\n- Considere múltiples perspectivas y escenarios\n- Incluya consideraciones de riesgo y mitigación\n- Mantenga un balance entre profundidad y claridad`);
-      
-      enhancementSections.push(`# ESTRUCTURA DE ENTREGA\nOrganiza tu respuesta con:\n1. Resumen ejecutivo con puntos clave\n2. Desarrollo detallado con argumentación sólida\n3. Recomendaciones específicas y priorizadas\n4. Próximos pasos concretos y timeline\n5. Conclusión que refuerce el valor propuesto`);
-    }
-    
-    // Combine all sections
-    const allSections = [...sections, ...enhancementSections];
-    prompt = allSections.join('\n\n');
-    
-    // Add final instructions for completeness
-    if (prompt) {
-      prompt += `\n\n# INSTRUCCIONES FINALES\nProporciona una respuesta completa, bien estructurada y de alta calidad que demuestre expertise profesional y agregue valor significativo para la audiencia objetivo. Utiliza ejemplos específicos cuando sea apropiado y asegúrate de que cada sección contribuya al objetivo general establecido.`;
-    }
-
-    setGeneratedPrompt(prompt.trim());
   };
 
+  // Progress calculation
+  const getSimpleProgress = () => {
+    const currentIndex = simpleSteps.findIndex(step => step.key === currentSimpleStep);
+    return ((currentIndex + 1) / simpleSteps.length) * 100;
+  };
+
+  const getAdvancedProgress = () => {
+    const currentIndex = advancedSteps.findIndex(step => step.key === currentAdvancedStep);
+    return ((currentIndex + 1) / advancedSteps.length) * 100;
+  };
+
+  // Prompt generation functions
+  const generateSimplePrompt = () => {
+    const sections = [];
+    
+    if (simpleData.objective) {
+      sections.push(`# OBJETIVO\n${simpleData.objective}`);
+    }
+    
+    if (simpleData.audience) {
+      sections.push(`# AUDIENCIA\nDirige tu respuesta a: ${simpleData.audience}`);
+    }
+    
+    if (simpleData.tone) {
+      sections.push(`# TONO DE VOZ\nUtiliza un tono: ${simpleData.tone}`);
+    }
+    
+    if (simpleData.style) {
+      sections.push(`# ESTILO NARRATIVO\nEscribe con un estilo: ${simpleData.style}`);
+    }
+    
+    if (simpleData.detail) {
+      sections.push(`# NIVEL DE DETALLE\n${simpleData.detail}`);
+    }
+    
+    if (simpleData.restrictions) {
+      sections.push(`# RESTRICCIONES\n${simpleData.restrictions}`);
+    }
+    
+    if (simpleData.format) {
+      sections.push(`# FORMATO DE SALIDA\nEstructura el resultado como: ${simpleData.format}`);
+    }
+
+    // Add quality guidelines
+    sections.push(`# INSTRUCCIONES FINALES\nCrea una respuesta completa y profesional que cumpla con todos los criterios establecidos. Mantén consistencia en el tono y asegúrate de que el contenido sea valioso y relevante para la audiencia objetivo.`);
+    
+    setGeneratedPrompt(sections.join('\n\n'));
+  };
+
+  const generateAdvancedPrompt = () => {
+    const sections = [];
+    
+    if (advancedData.objective) {
+      sections.push(`# OBJETIVO PRINCIPAL\n${advancedData.objective}\n\nDesglosa este objetivo en componentes específicos y establece criterios de éxito medibles.`);
+    }
+    
+    if (advancedData.context) {
+      sections.push(`# CONTEXTO DETALLADO\n${advancedData.context}\n\nConsidera las implicaciones estratégicas, factores del entorno competitivo y tendencias actuales del mercado.`);
+    }
+    
+    if (advancedData.audience) {
+      sections.push(`# AUDIENCIA SEGMENTADA\nDirige tu respuesta específicamente a: ${advancedData.audience}\n\nAdapta el nivel de detalle técnico, lenguaje y ejemplos para maximizar resonancia y comprensión. Considera sus motivaciones principales y procesos de toma de decisión.`);
+    }
+    
+    if (advancedData.tone) {
+      sections.push(`# TONO DE VOZ\nUtiliza un tono: ${advancedData.tone}\n\nMantén consistencia tonal a lo largo de toda la respuesta y asegúrate de que refleje los valores de la marca.`);
+    }
+    
+    if (advancedData.style) {
+      sections.push(`# ESTILO NARRATIVO\nEscribe con un estilo: ${advancedData.style}\n\nUtiliza transiciones fluidas entre conceptos y estructura la información de manera lógica y progresiva.`);
+    }
+    
+    if (advancedData.detail) {
+      sections.push(`# NIVEL DE DETALLE\n${advancedData.detail}\n\nBalancea profundidad con claridad, proporcionando la información necesaria sin abrumar a la audiencia.`);
+    }
+    
+    if (advancedData.structure) {
+      sections.push(`# ESTRUCTURA DEL MENSAJE\nOrganiza el contenido siguiendo esta estructura: ${advancedData.structure}\n\nAsegúrate de que cada sección agregue valor único y contribuya al objetivo general.`);
+    }
+    
+    if (advancedData.restrictions) {
+      sections.push(`# RESTRICCIONES AVANZADAS\n${advancedData.restrictions}\n\nAdhiérete estrictamente a estas limitaciones mientras maximizas el valor dentro de los parámetros establecidos.`);
+    }
+    
+    if (advancedData.keywords) {
+      sections.push(`# PALABRAS CLAVE\nIncorpora naturalmente estos conceptos: ${advancedData.keywords}\n\nIntégra las palabras clave de manera orgánica sin forzar su inclusión.`);
+    }
+    
+    if (advancedData.examples) {
+      sections.push(`# EJEMPLOS Y REFERENCIAS\nUtiliza como referencia: ${advancedData.examples}\n\nAplica estos ejemplos para ilustrar puntos clave y proporcionar evidencia concreta.`);
+    }
+    
+    if (advancedData.format) {
+      sections.push(`# FORMATO DE SALIDA\nEstructura el resultado como: ${advancedData.format}\n\nSigue las convenciones del formato especificado y optimiza para el canal de distribución.`);
+    }
+    
+    if (advancedData.additional) {
+      sections.push(`# CONFIGURACIÓN ADICIONAL\n${advancedData.additional}\n\nAplica estas configuraciones específicas para optimizar el resultado final.`);
+    }
+
+    // Add comprehensive methodology
+    sections.push(`# METODOLOGÍA DE DESARROLLO\nEstructura tu respuesta utilizando un framework sistemático:\n- Análisis de la situación actual\n- Identificación de oportunidades y desafíos\n- Desarrollo de soluciones específicas\n- Plan de implementación con pasos concretos\n- Métricas de éxito y seguimiento`);
+    
+    sections.push(`# CRITERIOS DE CALIDAD AVANZADOS\nAsegúrate de que tu respuesta:\n- Proporcione valor inmediato y accionable\n- Esté respaldada por evidencia o mejores prácticas\n- Considere múltiples perspectivas y escenarios\n- Incluya consideraciones de riesgo y mitigación\n- Mantenga equilibrio entre innovación y pragmatismo\n- Demuestre expertise profesional del más alto nivel`);
+    
+    setGeneratedPrompt(sections.join('\n\n'));
+  };
+
+  // Output formatting
   const formatPromptOutput = () => {
     if (!generatedPrompt) return '';
     
@@ -285,21 +563,33 @@ const PromptBuilder = () => {
       case 'html':
         return generatedPrompt
           .split('\n\n')
-          .map(paragraph => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`)
+          .map(section => {
+            if (section.startsWith('#')) {
+              const lines = section.split('\n');
+              const header = lines[0].replace(/^#+\s*/, '');
+              const content = lines.slice(1).join('<br>');
+              return `<h2>${header}</h2>\n<p>${content}</p>`;
+            }
+            return `<p>${section.replace(/\n/g, '<br>')}</p>`;
+          })
           .join('\n');
       
       case 'json':
-        const sections = generatedPrompt.split('\n\n');
+        const sections = generatedPrompt.split('\n\n').map((section, index) => ({
+          id: index + 1,
+          type: section.startsWith('#') ? 'header' : 'content',
+          content: section
+        }));
+        
         const jsonOutput = {
           prompt: generatedPrompt,
-          sections: sections.map((section, index) => ({
-            id: index + 1,
-            content: section
-          })),
+          sections: sections,
           metadata: {
             created: new Date().toISOString(),
             mode: mode,
-            steps_completed: Object.values(promptData).filter(v => v.trim().length > 0).length
+            outputFormat: outputFormat,
+            totalSections: sections.length,
+            wordCount: generatedPrompt.split(' ').length
           }
         };
         return JSON.stringify(jsonOutput, null, 2);
@@ -309,6 +599,7 @@ const PromptBuilder = () => {
     }
   };
 
+  // Utility functions
   const copyPrompt = () => {
     const output = formatPromptOutput();
     if (output) {
@@ -322,17 +613,32 @@ const PromptBuilder = () => {
 
   const resetBuilder = () => {
     setMode('initial');
-    setCurrentStep('role');
+    setCurrentSimpleStep('objective');
+    setCurrentAdvancedStep('objective');
     setOutputFormat('text');
     setGeneratedPrompt('');
-    setPromptData({
-      role: '',
-      context: '',
-      task: '',
+    setSimpleData({
+      objective: '',
       audience: '',
-      format: '',
+      tone: '',
+      style: '',
+      detail: '',
+      restrictions: '',
+      format: ''
+    });
+    setAdvancedData({
+      objective: '',
+      context: '',
+      audience: '',
+      tone: '',
+      style: '',
+      detail: '',
+      structure: '',
+      restrictions: '',
+      keywords: '',
       examples: '',
-      restrictions: ''
+      format: '',
+      additional: ''
     });
   };
 
@@ -346,314 +652,436 @@ const PromptBuilder = () => {
               <Wand2 className="h-12 w-12 text-primary" />
             </div>
             <h2 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-6">
-              Prompt Builder Inteligente
+              Prompt Builder Profesional
             </h2>
             <p className="text-xl text-muted-foreground max-w-4xl mx-auto mb-12 leading-relaxed">
-              Crea prompts profesionales paso a paso siguiendo los 7 pilares del prompt engineering.
-              Integra automáticamente el tono, estilo y voz de tu marca para resultados consistentes.
+              Crea prompts avanzados paso a paso. Dos modos diseñados para diferentes niveles de personalización y control absoluto sobre el resultado.
             </p>
           </div>
 
           <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-500 cursor-pointer group animate-slide-up" 
+            <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-500 cursor-pointer group" 
                   onClick={() => setMode('simple')}>
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <CardHeader className="text-center pb-6 relative">
-                <div className="mx-auto mb-6 p-6 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl w-24 h-24 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Zap className="h-12 w-12 text-primary" />
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-green-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <CardHeader className="relative z-10">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="p-3 bg-green-500/10 rounded-lg">
+                    <Brain className="h-8 w-8 text-green-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-2xl text-green-700">🟢 Prompt Sencillo</CardTitle>
+                    <CardDescription className="text-green-600/80">7 pilares de la IA - Rápido y efectivo</CardDescription>
+                  </div>
                 </div>
-                <CardTitle className="text-3xl mb-3 font-bold">Prompt Sencillo</CardTitle>
-                <CardDescription className="text-base text-muted-foreground">
-                  Flujo rápido y eficiente con opciones clave preestablecidas. Perfecto para crear prompts profesionales en minutos.
-                </CardDescription>
               </CardHeader>
-              <CardContent className="relative">
-                <ul className="space-y-3 text-sm text-muted-foreground mb-8">
-                  <li className="flex items-center"><Heart className="h-4 w-4 mr-3 text-primary" />7 pilares esenciales</li>
-                  <li className="flex items-center"><Star className="h-4 w-4 mr-3 text-primary" />Opciones preestablecidas</li>
-                  <li className="flex items-center"><Lightbulb className="h-4 w-4 mr-3 text-primary" />Proceso optimizado</li>
-                  <li className="flex items-center"><Target className="h-4 w-4 mr-3 text-primary" />Resultados consistentes</li>
-                </ul>
-                <Button size="lg" className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 group-hover:shadow-lg transition-all duration-300">
-                  <Play className="h-5 w-5 mr-2" />
-                  Comenzar Prompt Sencillo
-                </Button>
+              <CardContent className="relative z-10">
+                <p className="text-muted-foreground mb-6 leading-relaxed">
+                  "Comienza creando tu prompt paso a paso. Rápido, sencillo y siempre coherente con la marca."
+                </p>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">7 pasos guiados</Badge>
+                    <Badge variant="outline" className="text-xs">Opciones predefinidas</Badge>
+                  </div>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Objetivo, audiencia y tono</li>
+                    <li>• Estilo y nivel de detalle</li>
+                    <li>• Restricciones y formato</li>
+                    <li>• Resultado profesional garantizado</li>
+                  </ul>
+                </div>
               </CardContent>
             </Card>
 
-            <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-500 cursor-pointer group animate-slide-up delay-200" 
+            <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-500 cursor-pointer group" 
                   onClick={() => setMode('advanced')}>
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <CardHeader className="text-center pb-6 relative">
-                <div className="mx-auto mb-6 p-6 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl w-24 h-24 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Settings className="h-12 w-12 text-primary" />
+              <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 via-orange-500/5 to-red-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <CardHeader className="relative z-10">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="p-3 bg-red-500/10 rounded-lg">
+                    <Settings2 className="h-8 w-8 text-red-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-2xl text-red-700">🔴 Prompt Avanzado</CardTitle>
+                    <CardDescription className="text-red-600/80">Experto - Máxima personalización</CardDescription>
+                  </div>
                 </div>
-                <CardTitle className="text-3xl mb-3 font-bold">Prompt Avanzado</CardTitle>
-                <CardDescription className="text-base text-muted-foreground">
-                  Control total y máxima personalización. Para usuarios experimentados que buscan resultados específicos.
-                </CardDescription>
               </CardHeader>
-              <CardContent className="relative">
-                <ul className="space-y-3 text-sm text-muted-foreground mb-8">
-                  <li className="flex items-center"><Settings2 className="h-4 w-4 mr-3 text-primary" />7 pilares completos</li>
-                  <li className="flex items-center"><Palette className="h-4 w-4 mr-3 text-primary" />Personalización total</li>
-                  <li className="flex items-center"><Shield className="h-4 w-4 mr-3 text-primary" />Control de restricciones</li>
-                  <li className="flex items-center"><BookOpen className="h-4 w-4 mr-3 text-primary" />Ejemplos detallados</li>
-                </ul>
-                <Button size="lg" variant="outline" className="w-full border-2 hover:bg-primary hover:text-primary-foreground group-hover:shadow-lg transition-all duration-300">
-                  <Settings2 className="h-5 w-5 mr-2" />
-                  Comenzar Prompt Avanzado
-                </Button>
+              <CardContent className="relative z-10">
+                <p className="text-muted-foreground mb-6 leading-relaxed">
+                  "Diseña un prompt único, ajustado a cada detalle. Control absoluto sobre el resultado."
+                </p>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">12 pasos expandidos</Badge>
+                    <Badge variant="outline" className="text-xs">Personalización total</Badge>
+                  </div>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Contexto detallado y estructura</li>
+                    <li>• Keywords y ejemplos específicos</li>
+                    <li>• Opciones adicionales avanzadas</li>
+                    <li>• Control granular sobre cada aspecto</li>
+                  </ul>
+                </div>
               </CardContent>
             </Card>
+          </div>
+
+          <div className="text-center mt-12">
+            <p className="text-sm text-muted-foreground">
+              Ambos modos incluyen navegación paso a paso, campos opcionales y salida en múltiples formatos
+            </p>
           </div>
         </div>
       </section>
     );
   }
 
-  // Step-by-step wizard
-  const currentStepIndex = steps.findIndex(step => step.key === currentStep);
-  const currentStepData = steps[currentStepIndex];
-  const Icon = currentStepData.icon;
+  // Simple mode wizard
+  if (mode === 'simple') {
+    const currentStepData = simpleSteps.find(step => step.key === currentSimpleStep)!;
+    const currentIndex = simpleSteps.findIndex(step => step.key === currentSimpleStep);
+    const isLastStep = currentIndex === simpleSteps.length - 1;
 
-  return (
-    <section id="builder" className="py-20 bg-gradient-to-br from-background via-muted/10 to-primary/5">
-      <div className="container mx-auto px-4">
-        {/* Header with bubble progress */}
-        <div className="max-w-5xl mx-auto mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                {mode === 'simple' ? 'Prompt Sencillo' : 'Prompt Avanzado'}
-              </h2>
-              <p className="text-muted-foreground mt-2">
-                {mode === 'simple' 
-                  ? 'Flujo optimizado con opciones preestablecidas'
-                  : 'Máxima personalización y control detallado'
-                }
-              </p>
+    return (
+      <section className="py-20 bg-gradient-to-br from-background via-muted/20 to-primary/5 min-h-screen">
+        <div className="container mx-auto px-4 max-w-4xl">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <Button variant="ghost" size="sm" onClick={() => setMode('initial')}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Volver
+              </Button>
+              <div className="flex items-center gap-3">
+                <Brain className="h-8 w-8 text-green-600" />
+                <h1 className="text-3xl font-bold text-green-700">Prompt Sencillo</h1>
+              </div>
             </div>
-            <Button variant="outline" onClick={resetBuilder} className="border-2">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Reiniciar
-            </Button>
-          </div>
-          
-          {/* Bubble Progress */}
-          <div className="flex items-center justify-center space-x-4 mb-8">
-            {steps.map((step, index) => {
-              const StepIcon = step.icon;
-              const isCompleted = index < currentStepIndex;
-              const isCurrent = index === currentStepIndex;
-              
-              return (
-                <div key={step.key} className="flex items-center">
-                  <div className={`relative flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-300 ${
-                    isCompleted 
-                      ? 'bg-primary border-primary text-primary-foreground shadow-lg' 
-                      : isCurrent
-                        ? 'bg-primary/20 border-primary text-primary scale-110 shadow-md'
-                        : 'bg-muted border-muted-foreground/30 text-muted-foreground'
-                  }`}>
-                    <StepIcon className="h-5 w-5" />
-                    {isCompleted && (
-                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                        <div className="w-2 h-2 bg-white rounded-full" />
-                      </div>
+            
+            {/* Progress bubbles */}
+            <div className="flex items-center justify-center gap-2 mb-8">
+              {simpleSteps.map((step, index) => {
+                const isActive = index === currentIndex;
+                const isCompleted = index < currentIndex;
+                const Icon = step.icon;
+                
+                return (
+                  <div key={step.key} className="flex items-center">
+                    <div className={`
+                      relative flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-300
+                      ${isActive ? 'border-green-500 bg-green-500 text-white' : 
+                        isCompleted ? 'border-green-500 bg-green-500 text-white' : 
+                        'border-muted bg-background text-muted-foreground'}
+                    `}>
+                      <Icon className="h-5 w-5" />
+                      {isActive && (
+                        <div className="absolute -inset-1 rounded-full border-2 border-green-300 animate-pulse"></div>
+                      )}
+                    </div>
+                    {index < simpleSteps.length - 1 && (
+                      <div className={`w-8 h-0.5 mx-2 transition-all duration-300 ${
+                        index < currentIndex ? 'bg-green-500' : 'bg-muted'
+                      }`}></div>
                     )}
                   </div>
-                  {index < steps.length - 1 && (
-                    <div className={`w-8 h-0.5 mx-2 transition-colors ${
-                      isCompleted ? 'bg-primary' : 'bg-muted-foreground/30'
-                    }`} />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">
-              Paso {currentStepIndex + 1} de {steps.length}: {currentStepData.title}
+                );
+              })}
+            </div>
+            
+            <p className="text-lg text-muted-foreground">
+              Paso {currentIndex + 1} de {simpleSteps.length} • {Math.round(getSimpleProgress())}% completado
             </p>
           </div>
-        </div>
 
-        <div className="max-w-4xl mx-auto">
-          <Card className="shadow-lg border-2">
-            <CardHeader className="pb-6">
-              <CardTitle className="flex items-center space-x-4 text-2xl">
-                <div className="p-3 bg-primary/10 rounded-lg">
-                  <Icon className="h-6 w-6 text-primary" />
+          {/* Step content */}
+          <Card className="mb-8">
+            <CardHeader>
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-green-500/10 rounded-lg">
+                  <currentStepData.icon className="h-8 w-8 text-green-600" />
                 </div>
-                <span>{currentStepData.title}</span>
-                <Badge variant="secondary" className="ml-auto">
-                  {currentStepData.required ? 'Obligatorio' : 'Opcional'}
-                </Badge>
-              </CardTitle>
-              <CardDescription className="text-base mt-3">
-                {getStepDescription(currentStep)}
-              </CardDescription>
+                <div>
+                  <CardTitle className="text-2xl">{currentStepData.title}</CardTitle>
+                  <CardDescription className="text-lg mt-2">{currentStepData.explanation}</CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            
             <CardContent className="space-y-6">
-              {mode === 'simple' && brandOptions[currentStep as keyof typeof brandOptions] ? (
-                <div className="space-y-4">
-                  <label className="text-sm font-medium text-foreground">
-                    Opciones preestablecidas:
-                  </label>
+              {/* Example */}
+              <div className="p-4 bg-muted/50 rounded-lg border-l-4 border-green-500">
+                <p className="text-sm font-medium text-muted-foreground mb-2">Ejemplo ilustrativo:</p>
+                <p className="text-sm italic">{currentStepData.example}</p>
+              </div>
+
+              {/* Options */}
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Opciones preestablecidas</label>
                   <Select 
-                    value={promptData[currentStep]} 
-                    onValueChange={(value) => updatePromptData(currentStep, value)}
+                    value={simpleData[currentSimpleStep]} 
+                    onValueChange={(value) => setSimpleData(prev => ({ ...prev, [currentSimpleStep]: value }))}
                   >
-                    <SelectTrigger className="h-12">
-                      <SelectValue placeholder={`Selecciona ${currentStepData.title.toLowerCase()}`} />
+                    <SelectTrigger className="mt-2">
+                      <SelectValue placeholder="Selecciona una opción..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {brandOptions[currentStep as keyof typeof brandOptions]?.map((option) => (
-                        <SelectItem key={option} value={option} className="py-3">
-                          {option}
-                        </SelectItem>
+                      {simpleOptions[currentSimpleStep]?.map((option, index) => (
+                        <SelectItem key={index} value={option}>{option}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-              ) : null}
-              
-              <div className="space-y-3">
-                <label className="text-sm font-medium text-foreground">
-                  {mode === 'simple' && brandOptions[currentStep as keyof typeof brandOptions] 
-                    ? 'O describe tu propio contenido:' 
-                    : `Describe tu ${currentStepData.title.toLowerCase()}:`}
-                </label>
-                <Textarea
-                  placeholder={getStepPlaceholder(currentStep)}
-                  value={promptData[currentStep]}
-                  onChange={(e) => updatePromptData(currentStep, e.target.value)}
-                  className="min-h-[120px] resize-none"
-                />
-              </div>
 
-              {/* Navigation buttons */}
-              <div className="flex justify-between pt-8 border-t">
-                <Button 
-                  variant="outline" 
-                  onClick={prevStep}
-                  disabled={currentStepIndex === 0}
-                  size="lg"
-                >
-                  <ChevronLeft className="h-4 w-4 mr-2" />
-                  Anterior
-                </Button>
-                
-                <Button 
-                  onClick={nextStep}
-                  disabled={!canProceed()}
-                  className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-                  size="lg"
-                >
-                  {currentStepIndex === steps.length - 1 ? (
-                    <>
-                      <Wand2 className="h-4 w-4 mr-2" />
-                      Generar Prompt
-                    </>
-                  ) : (
-                    <>
-                      Siguiente
-                      <ChevronRight className="h-4 w-4 ml-2" />
-                    </>
-                  )}
-                </Button>
+                <div>
+                  <label className="text-sm font-medium">Personalización libre</label>
+                  <Textarea 
+                    placeholder="O escribe tu propia versión personalizada..."
+                    value={simpleData[currentSimpleStep]}
+                    onChange={(e) => setSimpleData(prev => ({ ...prev, [currentSimpleStep]: e.target.value }))}
+                    className="mt-2"
+                    rows={3}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Generated prompt display */}
+          {/* Navigation */}
+          <div className="flex items-center justify-between">
+            <Button 
+              variant="outline" 
+              onClick={prevSimpleStep} 
+              disabled={currentIndex === 0}
+              className="flex items-center gap-2"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Anterior
+            </Button>
+
+            <Button 
+              onClick={nextSimpleStep}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+            >
+              {isLastStep ? 'Generar Prompt' : 'Siguiente'}
+              {!isLastStep && <ChevronRight className="h-4 w-4" />}
+              {isLastStep && <Wand2 className="h-4 w-4" />}
+            </Button>
+          </div>
+
+          {/* Generated prompt preview */}
           {generatedPrompt && (
-            <Card className="mt-8 shadow-lg border-2 animate-fade-in">
+            <Card className="mt-8">
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl">Tu Prompt Personalizado</CardTitle>
-                  <div className="flex items-center space-x-3">
-                    {/* Format toggle buttons */}
-                    <div className="flex bg-muted rounded-lg p-1">
-                      <Button
-                        variant={outputFormat === 'text' ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setOutputFormat('text')}
-                        className="rounded-md text-xs px-3"
-                      >
-                        Texto
-                      </Button>
-                      <Button
-                        variant={outputFormat === 'html' ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setOutputFormat('html')}
-                        className="rounded-md text-xs px-3"
-                      >
-                        <Code className="h-3 w-3 mr-1" />
-                        HTML
-                      </Button>
-                      <Button
-                        variant={outputFormat === 'json' ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setOutputFormat('json')}
-                        className="rounded-md text-xs px-3"
-                      >
-                        <FileCode className="h-3 w-3 mr-1" />
-                        JSON
-                      </Button>
-                    </div>
-                    
-                    <Button variant="outline" onClick={copyPrompt} size="lg">
-                      <Copy className="h-4 w-4 mr-2" />
-                      Copiar
-                    </Button>
-                  </div>
+                <CardTitle>Prompt Generado</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setOutputFormat('text')} 
+                          className={outputFormat === 'text' ? 'bg-primary text-primary-foreground' : ''}>
+                    Texto
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setOutputFormat('html')}
+                          className={outputFormat === 'html' ? 'bg-primary text-primary-foreground' : ''}>
+                    HTML
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setOutputFormat('json')}
+                          className={outputFormat === 'json' ? 'bg-primary text-primary-foreground' : ''}>
+                    JSON
+                  </Button>
+                  <Button size="sm" onClick={copyPrompt}>
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copiar
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={resetBuilder}>
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Resetear
+                  </Button>
                 </div>
               </CardHeader>
-              
               <CardContent>
-                <div className="bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl p-6 border-2 border-primary/20">
-                  <pre className="whitespace-pre-wrap text-sm font-mono text-foreground leading-relaxed overflow-x-auto">
-                    {formatPromptOutput()}
-                  </pre>
+                <div className="bg-muted p-4 rounded-lg">
+                  <pre className="whitespace-pre-wrap text-sm font-mono">{formatPromptOutput()}</pre>
                 </div>
               </CardContent>
             </Card>
           )}
         </div>
-      </div>
-    </section>
-  );
+      </section>
+    );
+  }
+
+  // Advanced mode wizard
+  if (mode === 'advanced') {
+    const currentStepData = advancedSteps.find(step => step.key === currentAdvancedStep)!;
+    const currentIndex = advancedSteps.findIndex(step => step.key === currentAdvancedStep);
+    const isLastStep = currentIndex === advancedSteps.length - 1;
+
+    return (
+      <section className="py-20 bg-gradient-to-br from-background via-muted/20 to-primary/5 min-h-screen">
+        <div className="container mx-auto px-4 max-w-4xl">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <Button variant="ghost" size="sm" onClick={() => setMode('initial')}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Volver
+              </Button>
+              <div className="flex items-center gap-3">
+                <Settings2 className="h-8 w-8 text-red-600" />
+                <h1 className="text-3xl font-bold text-red-700">Prompt Avanzado</h1>
+              </div>
+            </div>
+            
+            {/* Progress bubbles */}
+            <div className="flex items-center justify-center gap-1 mb-8 flex-wrap">
+              {advancedSteps.map((step, index) => {
+                const isActive = index === currentIndex;
+                const isCompleted = index < currentIndex;
+                const Icon = step.icon;
+                
+                return (
+                  <div key={step.key} className="flex items-center">
+                    <div className={`
+                      relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300
+                      ${isActive ? 'border-red-500 bg-red-500 text-white' : 
+                        isCompleted ? 'border-red-500 bg-red-500 text-white' : 
+                        'border-muted bg-background text-muted-foreground'}
+                    `}>
+                      <Icon className="h-4 w-4" />
+                      {isActive && (
+                        <div className="absolute -inset-1 rounded-full border-2 border-red-300 animate-pulse"></div>
+                      )}
+                    </div>
+                    {index < advancedSteps.length - 1 && (
+                      <div className={`w-4 h-0.5 mx-1 transition-all duration-300 ${
+                        index < currentIndex ? 'bg-red-500' : 'bg-muted'
+                      }`}></div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            
+            <p className="text-lg text-muted-foreground">
+              Paso {currentIndex + 1} de {advancedSteps.length} • {Math.round(getAdvancedProgress())}% completado
+            </p>
+          </div>
+
+          {/* Step content */}
+          <Card className="mb-8">
+            <CardHeader>
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-red-500/10 rounded-lg">
+                  <currentStepData.icon className="h-8 w-8 text-red-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl">{currentStepData.title}</CardTitle>
+                  <CardDescription className="text-lg mt-2">{currentStepData.explanation}</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Example */}
+              <div className="p-4 bg-muted/50 rounded-lg border-l-4 border-red-500">
+                <p className="text-sm font-medium text-muted-foreground mb-2">Ejemplo ilustrativo:</p>
+                <p className="text-sm italic">{currentStepData.example}</p>
+              </div>
+
+              {/* Options */}
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Opciones preestablecidas</label>
+                  <Select 
+                    value={advancedData[currentAdvancedStep]} 
+                    onValueChange={(value) => setAdvancedData(prev => ({ ...prev, [currentAdvancedStep]: value }))}
+                  >
+                    <SelectTrigger className="mt-2">
+                      <SelectValue placeholder="Selecciona una opción..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {advancedOptions[currentAdvancedStep]?.map((option, index) => (
+                        <SelectItem key={index} value={option}>{option}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Personalización libre</label>
+                  <Textarea 
+                    placeholder="O escribe tu propia versión personalizada con máximo detalle..."
+                    value={advancedData[currentAdvancedStep]}
+                    onChange={(e) => setAdvancedData(prev => ({ ...prev, [currentAdvancedStep]: e.target.value }))}
+                    className="mt-2"
+                    rows={4}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Navigation */}
+          <div className="flex items-center justify-between">
+            <Button 
+              variant="outline" 
+              onClick={prevAdvancedStep} 
+              disabled={currentIndex === 0}
+              className="flex items-center gap-2"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Anterior
+            </Button>
+
+            <Button 
+              onClick={nextAdvancedStep}
+              className="flex items-center gap-2 bg-red-600 hover:bg-red-700"
+            >
+              {isLastStep ? 'Generar Prompt' : 'Siguiente'}
+              {!isLastStep && <ChevronRight className="h-4 w-4" />}
+              {isLastStep && <Wand2 className="h-4 w-4" />}
+            </Button>
+          </div>
+
+          {/* Generated prompt preview */}
+          {generatedPrompt && (
+            <Card className="mt-8">
+              <CardHeader>
+                <CardTitle>Prompt Generado</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setOutputFormat('text')} 
+                          className={outputFormat === 'text' ? 'bg-primary text-primary-foreground' : ''}>
+                    Texto
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setOutputFormat('html')}
+                          className={outputFormat === 'html' ? 'bg-primary text-primary-foreground' : ''}>
+                    HTML
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setOutputFormat('json')}
+                          className={outputFormat === 'json' ? 'bg-primary text-primary-foreground' : ''}>
+                    JSON
+                  </Button>
+                  <Button size="sm" onClick={copyPrompt}>
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copiar
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={resetBuilder}>
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Resetear
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-muted p-4 rounded-lg">
+                  <pre className="whitespace-pre-wrap text-sm font-mono">{formatPromptOutput()}</pre>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </section>
+    );
+  }
+
+  return null;
 };
-
-// Helper functions
-function getStepDescription(step: Step): string {
-  const descriptions = {
-    role: 'Define qué experto, profesional o personalidad específica debe adoptar la IA. Esto incluye su nivel de expertise, años de experiencia, especialización y metodologías que domina.',
-    context: 'Proporciona información detallada de fondo, situación actual del mercado, desafíos específicos del sector, antecedentes históricos relevantes y factores del entorno que influyen en la situación.',
-    task: 'Especifica con precisión qué acción principal, deliverable o resultado debe generar la IA. Define el alcance, profundidad esperada y componentes específicos que debe incluir la respuesta.',
-    audience: 'Define detalladamente para quién será la respuesta, incluyendo su nivel de conocimiento técnico, motivaciones principales, procesos de decisión, preocupaciones típicas y contexto organizacional.',
-    format: 'Indica el tono específico, estilo narrativo, estructura preferida, nivel de formalidad, uso de ejemplos, densidad informativa y cómo quieres que se organice y presente la información.',
-    examples: 'Proporciona referencias específicas, casos de estudio, benchmarks de industria, testimonios, frameworks comprobados o cualquier ejemplo concreto que sirva como guía para la calidad y estilo esperado.',
-    restrictions: 'Establece límites claros, consideraciones legales, restricciones de confidencialidad, límites de extensión, temas a evitar y cualquier parámetro que la IA debe respetar estrictamente.'
-  };
-  return descriptions[step];
-}
-
-function getStepPlaceholder(step: Step): string {
-  const placeholders = {
-    role: 'Ej: Consultor senior de McKinsey especializado en transformación digital con 15 años de experiencia ayudando a Fortune 500 en la implementación de estrategias tecnológicas disruptivas, con expertise particular en change management y adopción de IA empresarial.',
-    context: 'Ej: Mi empresa es una compañía manufacturera tradicional de 150 años que enfrenta disrupción digital acelerada por competidores tech-enabled. Hemos perdido 15% market share en 24 meses y nuestros procesos actuales son 40% menos eficientes que benchmarks digitales...',
-    task: 'Ej: Desarrollar una hoja de ruta integral de transformación digital de 36 meses que incluya: diagnóstico actual detallado, identificación de quick wins, roadmap de tecnologías prioritarias, plan de change management, estructura de governance, métricas de seguimiento y business case financiero robusto.',
-    audience: 'Ej: Board de directores compuesto por ejecutivos de 55+ años con background tradicional, alta aversión al riesgo, enfoque ROI-driven, preocupados por job displacement y necesidad de aprobar inversión de $50M+ con justificación sólida ante shareholders conservadores.',
-    format: 'Ej: Presentación ejecutiva estilo consultoría premium con: resumen ejecutivo de 2 minutos, análisis estructurado con framework MECE, datos cuantitativos que respalden cada argumento, roadmap visual claro, business case con NPV/IRR, y call-to-action específico con next steps inmediatos.',
-    examples: 'Ej: Caso de transformación exitosa de General Electric bajo Jeffrey Immelt, framework de transformación digital de BCG, metodología de adoption de Salesforce, benchmarks de McKinsey Global Institute sobre ROI de IA empresarial, y testimonios específicos de CEOs que lideraron transformaciones similares.',
-    restrictions: 'Ej: Máximo 15 slides + anexos, evitar mencionar competidores directos por NDA, mantener tono conservador apropiado para cultura corporativa tradicional, incluir únicamente tecnologías maduras con track record comprobado, no exceder budget preliminar de $50M, considerar constraints regulatorios del sector.'
-  };
-  return placeholders[step];
-}
 
 export default PromptBuilder;
