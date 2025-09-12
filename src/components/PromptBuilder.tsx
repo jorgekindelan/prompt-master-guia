@@ -47,6 +47,7 @@ const PromptBuilder = () => {
   const [currentAdvancedStep, setCurrentAdvancedStep] = useState<AdvancedStep>('objective');
   const [outputFormat, setOutputFormat] = useState<OutputFormat>('text');
   const [generatedPrompt, setGeneratedPrompt] = useState<string>("");
+  const [newItemInput, setNewItemInput] = useState('');
   
   // Prompt data for both modes
   const [simpleData, setSimpleData] = useState<SimplePromptData>({
@@ -889,6 +890,7 @@ Tu deliverable debe demostrar:
     setCurrentAdvancedStep('objective');
     setOutputFormat('text');
     setGeneratedPrompt('');
+    setNewItemInput('');
     setSimpleData({
       objective: '',
       audience: '',
@@ -1187,7 +1189,6 @@ Tu deliverable debe demostrar:
     const currentIndex = advancedSteps.findIndex(step => step.key === currentAdvancedStep);
     const isLastStep = currentIndex === advancedSteps.length - 1;
     const isCurrentFieldArray = isArrayField(currentAdvancedStep);
-    const [newItemInput, setNewItemInput] = useState('');
 
     const handleAddNewItem = () => {
       if (newItemInput.trim() && isArrayField(currentAdvancedStep)) {
