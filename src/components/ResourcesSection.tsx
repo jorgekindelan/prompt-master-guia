@@ -1,9 +1,37 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Book, Sparkles } from "lucide-react";
+import { ExternalLink, Book, Sparkles, Loader2 } from "lucide-react";
+import { modelCardService } from "@/lib/services/modelCardService";
+import { keywordService } from "@/lib/services/keywordService";
+import type { ModelCard, Keyword } from "@/lib/types";
 
 const ResourcesSection = () => {
+  const [aiModels, setAiModels] = useState<ModelCard[]>([]);
+  const [glossaryTerms, setGlossaryTerms] = useState<Keyword[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [models, keywords] = await Promise.all([
+          modelCardService.list(),
+          keywordService.list()
+        ]);
+        setAiModels(models);
+        setGlossaryTerms(keywords);
+      } catch (error) {
+        console.error('Error fetching resources data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const getPricingColor = (price: string) => {
     switch (price) {
       case "Gratis": return "bg-emerald-500 text-white";
@@ -13,57 +41,18 @@ const ResourcesSection = () => {
     }
   };
 
-  const aiModels = [
-    {
-      name: "ChatGPT",
-      description: "El modelo conversacional más popular de OpenAI que revolucionó la interacción con IA. Capaz de mantener conversaciones naturales, generar código, escribir textos creativos y resolver problemas complejos. Su versión GPT-4 ofrece capacidades multimodales avanzadas y un razonamiento más sofisticado.",
-      url: "https://chat.openai.com",
-      price: "Freemium"
-    },
-    {
-      name: "Claude",
-      description: "Desarrollado por Anthropic, Claude se destaca por su enfoque en la seguridad y la utilidad práctica. Especialmente efectivo para análisis de documentos largos, programación compleja y tareas que requieren razonamiento ético. Su ventana de contexto extendida permite trabajar con textos muy extensos.",
-      url: "https://claude.ai",
-      price: "Freemium"
-    },
-    {
-      name: "Gemini",
-      description: "El modelo multimodal más avanzado de Google que integra texto, imágenes, audio y video en una sola plataforma. Ofrece acceso en tiempo real a información actualizada de Google Search y se integra perfectamente con el ecosistema de Google Workspace.",
-      url: "https://gemini.google.com",
-      price: "Gratis"
-    },
-    {
-      name: "Perplexity AI",
-      description: "Un motor de búsqueda conversacional único que combina IA generativa con búsqueda web en tiempo real. Proporciona respuestas precisas con citas y fuentes verificables, ideal para investigación académica, periodismo y verificación de información actualizada.",
-      url: "https://perplexity.ai",
-      price: "Freemium"
-    },
-    {
-      name: "Microsoft Copilot",
-      description: "Asistente de IA totalmente integrado en el ecosistema Microsoft que potencia Office 365, Windows y Edge. Especializado en productividad empresarial, análisis de datos, automatización de tareas y creación de contenido profesional con acceso directo a tus documentos y aplicaciones.",
-      url: "https://copilot.microsoft.com",
-      price: "Freemium"
-    },
-    {
-      name: "Meta AI",
-      description: "El asistente inteligente de Meta optimizado para creatividad visual y social. Sobresale en la generación de imágenes, creación de contenido para redes sociales y conversaciones naturales. Integrado en WhatsApp, Instagram y Facebook para una experiencia social fluida.",
-      url: "https://www.meta.ai",
-      price: "Gratis"
-    }
-  ];
-
-  const glossaryTerms = [
-    { term: "Prompt", definition: "Instrucción o pregunta que se da a un modelo de IA para obtener una respuesta específica" },
-    { term: "Few-shot", definition: "Técnica que proporciona pocos ejemplos al modelo para guiar su respuesta" },
-    { term: "Zero-shot", definition: "Técnica donde se da una instrucción sin ejemplos previos" },
-    { term: "Chain-of-Thought (CoT)", definition: "Método que pide al modelo mostrar su razonamiento paso a paso" },
-    { term: "Temperature", definition: "Parámetro que controla la creatividad/aleatoriedad de las respuestas del modelo" },
-    { term: "Token", definition: "Unidad básica de texto que procesa el modelo (palabra, parte de palabra o carácter)" },
-    { term: "Context Window", definition: "Cantidad máxima de texto que el modelo puede procesar en una conversación" },
-    { term: "Fine-tuning", definition: "Proceso de entrenar un modelo pre-entrenado con datos específicos" },
-    { term: "Hallucination", definition: "Cuando el modelo genera información incorrecta o inventada" },
-    { term: "ReAct", definition: "Técnica que combina razonamiento (Reasoning) y acción (Acting) en prompts" }
-  ];
+  if (loading) {
+    return (
+      <section id="recursos" className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground">Cargando recursos...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="recursos" className="py-20 bg-muted/30">
@@ -87,36 +76,37 @@ const ResourcesSection = () => {
             <h3 className="text-2xl font-bold text-foreground">Modelos de IA Principales</h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {aiModels.map((model) => (
-              <Card key={model.name} className="shadow-card-custom hover:shadow-elegant transition-all duration-300 flex flex-col h-full">
-                <CardHeader className="flex-grow">
-                  <div className="flex items-start justify-between mb-3">
+          {aiModels.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No hay modelos disponibles</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {aiModels.map((model) => (
+                <Card key={model.id} className="shadow-card-custom hover:shadow-elegant transition-all duration-300 flex flex-col h-full">
+                  <CardHeader className="flex-grow">
                     <CardTitle className="text-lg">{model.name}</CardTitle>
-                    <Badge className={`${getPricingColor(model.price)} font-semibold`}>
-                      {model.price}
-                    </Badge>
-                  </div>
-                  <CardDescription className="text-sm leading-relaxed">
-                    {model.description}
-                  </CardDescription>
-                </CardHeader>
+                    <CardDescription className="text-sm leading-relaxed">
+                      {model.description}
+                    </CardDescription>
+                  </CardHeader>
 
-                <CardContent className="pt-0">
-                  <Button 
-                    variant="outline" 
-                    className="w-full hover:bg-primary/10"
-                    asChild
-                  >
-                    <a href={model.url} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Probar
-                    </a>
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  <CardContent className="pt-0">
+                    <Button 
+                      variant="outline" 
+                      className="w-full hover:bg-primary/10"
+                      asChild
+                    >
+                      <a href={model.link} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Ver más
+                      </a>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Glossary Section */}
@@ -133,24 +123,30 @@ const ResourcesSection = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-6xl mx-auto">
-            {glossaryTerms.map((term, index) => (
-              <Card 
-                key={term.term} 
-                className="shadow-card-custom hover:shadow-elegant transition-all duration-300 animate-scale-in"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <CardContent className="p-6">
-                  <div className="space-y-2">
-                    <h4 className="font-semibold text-primary text-lg">{term.term}</h4>
-                    <p className="text-muted-foreground text-sm leading-relaxed">
-                      {term.definition}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {glossaryTerms.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No hay términos disponibles</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-6xl mx-auto">
+              {glossaryTerms.map((term, index) => (
+                <Card 
+                  key={term.id} 
+                  className="shadow-card-custom hover:shadow-elegant transition-all duration-300 animate-scale-in"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <CardContent className="p-6">
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-primary text-lg">{term.name}</h4>
+                      <p className="text-muted-foreground text-sm leading-relaxed">
+                        {term.description}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
 
       </div>

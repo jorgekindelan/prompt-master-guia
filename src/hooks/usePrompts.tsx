@@ -45,30 +45,7 @@ export function PromptsProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Mock categories for compatibility (since Django doesn't have this concept)
-  const mockCategories: Category[] = [
-    {
-      id: '1',
-      name: 'Escritura',
-      description: 'Prompts para escritura creativa',
-      icon: '✍️',
-      color: 'blue'
-    },
-    {
-      id: '2', 
-      name: 'Programación',
-      description: 'Prompts para programación',
-      icon: '💻',
-      color: 'green'
-    },
-    {
-      id: '3',
-      name: 'Marketing',
-      description: 'Prompts para marketing',
-      icon: '📈',
-      color: 'purple'
-    }
-  ];
+  // No more mock categories - removed completely
 
   const fetchPrompts = async (filters: PromptFilters = {}, page = 1) => {
     try {
@@ -87,8 +64,8 @@ export function PromptsProvider({ children }: { children: React.ReactNode }) {
 
   const fetchCategories = async () => {
     try {
-      // Using mock categories since Django backend doesn't have categories
-      setCategories(mockCategories);
+      // Categories removed - Django backend doesn't have this concept
+      setCategories([]);
     } catch (error: any) {
       console.error('Error fetching categories:', error);
     }
