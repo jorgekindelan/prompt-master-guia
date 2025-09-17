@@ -27,6 +27,10 @@ export interface Prompt {
   updated_at: string;
   favorites_count: number;
   is_favorited?: boolean;
+  rating_avg?: number;
+  rating_count?: number;
+  view_count?: number;
+  description?: string;
 }
 
 export interface ModelCard {

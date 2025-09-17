@@ -70,10 +70,10 @@ export function PromptsProvider({ children }: { children: React.ReactNode }) {
     }
   ];
 
-  const fetchPrompts = async (filters: PromptFilters = {}) => {
+  const fetchPrompts = async (filters: PromptFilters = {}, page = 1) => {
     try {
-      const data = await promptService.list(filters);
-      setPrompts(Array.isArray(data) ? data : []);
+      const data = await promptService.list(filters, page);
+      setPrompts(data.results ?? []);
     } catch (error: any) {
       console.error('Error fetching prompts:', error);
       setPrompts([]); // Set empty array on error

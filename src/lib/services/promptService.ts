@@ -2,17 +2,32 @@ import apiClient from '../api/client';
 import type { Prompt, CreatePromptRequest, PromptFilters } from '../types';
 
 class PromptService {
-  async list(filters: PromptFilters = {}): Promise<Prompt[]> {
+  async list(filters: PromptFilters = {}, page = 1): Promise<{ count: number; next: string | null; previous: string | null; results: Prompt[] }> {
     const params = new URLSearchParams();
     
+    params.append('page', page.toString());
     if (filters.search) params.append('search', filters.search);
     if (filters.difficulty) params.append('difficulty', filters.difficulty);
     if (filters.tag) params.append('tag', filters.tag);
     if (filters.owner) params.append('owner', filters.owner);
 
     const response = await apiClient.get(`/prompts/?${params.toString()}`);
-    // Normalize response - handle both direct array and paginated results
-    return Array.isArray(response.data) ? response.data : (response.data?.results ?? []);
+    return {
+      count: response.data?.count ?? 0,
+      next: response.data?.next ?? null,
+      previous: response.data?.previous ?? null,
+      results: Array.isArray(response.data?.results) ? response.data.results : []
+    };
+  }
+
+  async listAll(page = 1, params: any = {}): Promise<{ count: number; next: string | null; previous: string | null; results: Prompt[] }> {
+    const { data } = await apiClient.get('/prompts/', { params: { page, ...params } });
+    return {
+      count: data?.count ?? 0,
+      next: data?.next ?? null,
+      previous: data?.previous ?? null,
+      results: Array.isArray(data?.results) ? data.results : [],
+    };
   }
 
   async detail(id: number): Promise<Prompt> {
@@ -42,14 +57,24 @@ class PromptService {
     await apiClient.delete(`/prompts/${id}/unfavorite/`);
   }
 
-  async mine(): Promise<Prompt[]> {
-    const response = await apiClient.get('/me/prompts/');
-    return Array.isArray(response.data) ? response.data : (response.data?.results ?? []);
+  async mine(page = 1): Promise<{ count: number; next: string | null; previous: string | null; results: Prompt[] }> {
+    const response = await apiClient.get('/me/prompts/', { params: { page } });
+    return {
+      count: response.data?.count ?? 0,
+      next: response.data?.next ?? null,
+      previous: response.data?.previous ?? null,
+      results: Array.isArray(response.data?.results) ? response.data.results : []
+    };
   }
 
-  async myFavorites(): Promise<Prompt[]> {
-    const response = await apiClient.get('/me/favorites/');
-    return Array.isArray(response.data) ? response.data : (response.data?.results ?? []);
+  async myFavorites(page = 1): Promise<{ count: number; next: string | null; previous: string | null; results: Prompt[] }> {
+    const response = await apiClient.get('/me/favorites/', { params: { page } });
+    return {
+      count: response.data?.count ?? 0,
+      next: response.data?.next ?? null,
+      previous: response.data?.previous ?? null,
+      results: Array.isArray(response.data?.results) ? response.data.results : []
+    };
   }
 }
 
