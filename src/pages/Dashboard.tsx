@@ -49,10 +49,10 @@ const Dashboard = () => {
     );
   }
 
-  const filteredPrompts = prompts.filter(prompt => {
-    const matchesSearch = prompt.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredPrompts = (prompts ?? []).filter(prompt => {
+    const matchesSearch = prompt.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          prompt.body?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         prompt.tags.some(tag => tag.name.toLowerCase().includes(searchTerm.toLowerCase()));
+                         (prompt.tags ?? []).some(tag => tag.name?.toLowerCase().includes(searchTerm.toLowerCase()));
     
     // Since Django doesn't have categories, we'll always match category filter
     const matchesCategory = selectedCategory === "all" || true;
@@ -60,8 +60,8 @@ const Dashboard = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const myPrompts = filteredPrompts.filter(prompt => prompt.owner.id === user?.id);
-  const publicPrompts = filteredPrompts.filter(prompt => prompt.owner.id !== user?.id);
+  const myPrompts = filteredPrompts.filter(prompt => prompt.owner?.id === user?.id);
+  const publicPrompts = filteredPrompts.filter(prompt => prompt.owner?.id !== user?.id);
 
   const handleCreatePrompt = async () => {
     if (!newPrompt.title || !newPrompt.content) {
@@ -222,48 +222,62 @@ const Dashboard = () => {
           {/* Tabs for My Prompts and Public Prompts */}
           <Tabs defaultValue="my-prompts" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="my-prompts">Mis Prompts ({myPrompts.length})</TabsTrigger>
-              <TabsTrigger value="public-prompts">Prompts Públicos ({publicPrompts.length})</TabsTrigger>
+              <TabsTrigger value="my-prompts">Mis Prompts ({(myPrompts ?? []).length})</TabsTrigger>
+              <TabsTrigger value="public-prompts">Prompts Públicos ({(publicPrompts ?? []).length})</TabsTrigger>
             </TabsList>
             
             <TabsContent value="my-prompts" className="mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {myPrompts.map(prompt => (
-                  <PromptCard 
-                    key={prompt.id} 
-                    prompt={prompt} 
-                    onDelete={deletePrompt}
-                    onRate={ratePrompt}
-                    onToggleFavorite={toggleFavorite}
-                    isOwner={true}
-                  />
-                ))}
-                {myPrompts.length === 0 && (
-                  <div className="col-span-full text-center py-12">
-                    <p className="text-muted-foreground">No tienes prompts aún. ¡Crea tu primer prompt!</p>
-                  </div>
-                )}
-              </div>
+              {loading ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                  <p className="mt-4 text-muted-foreground">Cargando prompts...</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {(myPrompts ?? []).map(prompt => (
+                    <PromptCard 
+                      key={prompt.id} 
+                      prompt={prompt} 
+                      onDelete={deletePrompt}
+                      onRate={ratePrompt}
+                      onToggleFavorite={toggleFavorite}
+                      isOwner={true}
+                    />
+                  ))}
+                  {(myPrompts ?? []).length === 0 && !loading && (
+                    <div className="col-span-full text-center py-12">
+                      <p className="text-muted-foreground">No tienes prompts aún. ¡Crea tu primer prompt!</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </TabsContent>
             
             <TabsContent value="public-prompts" className="mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {publicPrompts.map(prompt => (
-                  <PromptCard 
-                    key={prompt.id} 
-                    prompt={prompt} 
-                    onDelete={deletePrompt}
-                    onRate={ratePrompt}
-                    onToggleFavorite={toggleFavorite}
-                    isOwner={false}
-                  />
-                ))}
-                {publicPrompts.length === 0 && (
-                  <div className="col-span-full text-center py-12">
-                    <p className="text-muted-foreground">No hay prompts públicos disponibles.</p>
-                  </div>
-                )}
-              </div>
+              {loading ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                  <p className="mt-4 text-muted-foreground">Cargando prompts...</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {(publicPrompts ?? []).map(prompt => (
+                    <PromptCard 
+                      key={prompt.id} 
+                      prompt={prompt} 
+                      onDelete={deletePrompt}
+                      onRate={ratePrompt}
+                      onToggleFavorite={toggleFavorite}
+                      isOwner={false}
+                    />
+                  ))}
+                  {(publicPrompts ?? []).length === 0 && !loading && (
+                    <div className="col-span-full text-center py-12">
+                      <p className="text-muted-foreground">No hay prompts públicos disponibles.</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </main>
@@ -285,6 +299,13 @@ interface PromptCardProps {
 
 const PromptCard = ({ prompt, onDelete, onRate, onToggleFavorite, isOwner }: PromptCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Defensive programming - ensure arrays and numbers exist
+  const tags = prompt.tags ?? [];
+  const favoritesCount = prompt.favorites_count ?? 0;
+  const ratingAvg = prompt.rating_avg ?? 0;
+  const ratingCount = prompt.rating_count ?? 0;
+  const viewCount = prompt.view_count ?? 0;
 
   return (
     <Card className="h-full flex flex-col">
@@ -329,9 +350,9 @@ const PromptCard = ({ prompt, onDelete, onRate, onToggleFavorite, isOwner }: Pro
       <CardContent className="flex-1 flex flex-col">
         <div className="flex-1">
           <div className={`text-sm text-muted-foreground ${isExpanded ? '' : 'line-clamp-3'}`}>
-            {prompt.content}
+            {prompt.body || prompt.content || ''}
           </div>
-          {prompt.content.length > 150 && (
+          {(prompt.body || prompt.content || '').length > 150 && (
             <Button
               variant="link"
               size="sm"
@@ -343,16 +364,16 @@ const PromptCard = ({ prompt, onDelete, onRate, onToggleFavorite, isOwner }: Pro
           )}
         </div>
         
-        {prompt.tags.length > 0 && (
+        {tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-4">
-            {prompt.tags.slice(0, 3).map((tag: string, index: number) => (
+            {tags.slice(0, 3).map((tag: any, index: number) => (
               <Badge key={index} variant="outline" className="text-xs">
-                {tag}
+                {typeof tag === 'string' ? tag : tag.name}
               </Badge>
             ))}
-            {prompt.tags.length > 3 && (
+            {tags.length > 3 && (
               <Badge variant="outline" className="text-xs">
-                +{prompt.tags.length - 3}
+                +{tags.length - 3}
               </Badge>
             )}
           </div>
@@ -362,12 +383,16 @@ const PromptCard = ({ prompt, onDelete, onRate, onToggleFavorite, isOwner }: Pro
           <div className="flex items-center space-x-4 text-sm text-muted-foreground">
             <div className="flex items-center space-x-1">
               <Star className="h-4 w-4" />
-              <span>{prompt.rating_avg.toFixed(1)}</span>
-              <span>({prompt.rating_count})</span>
+              <span>{ratingAvg.toFixed(1)}</span>
+              <span>({ratingCount})</span>
             </div>
             <div className="flex items-center space-x-1">
               <Eye className="h-4 w-4" />
-              <span>{prompt.view_count}</span>
+              <span>{viewCount}</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <Heart className="h-4 w-4" />
+              <span>{favoritesCount}</span>
             </div>
           </div>
           

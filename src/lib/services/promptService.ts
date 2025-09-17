@@ -10,8 +10,9 @@ class PromptService {
     if (filters.tag) params.append('tag', filters.tag);
     if (filters.owner) params.append('owner', filters.owner);
 
-    const response = await apiClient.get<Prompt[]>(`/prompts/?${params.toString()}`);
-    return response.data;
+    const response = await apiClient.get(`/prompts/?${params.toString()}`);
+    // Normalize response - handle both direct array and paginated results
+    return Array.isArray(response.data) ? response.data : (response.data?.results ?? []);
   }
 
   async detail(id: number): Promise<Prompt> {
@@ -42,13 +43,13 @@ class PromptService {
   }
 
   async mine(): Promise<Prompt[]> {
-    const response = await apiClient.get<Prompt[]>('/me/prompts/');
-    return response.data;
+    const response = await apiClient.get('/me/prompts/');
+    return Array.isArray(response.data) ? response.data : (response.data?.results ?? []);
   }
 
   async myFavorites(): Promise<Prompt[]> {
-    const response = await apiClient.get<Prompt[]>('/me/favorites/');
-    return response.data;
+    const response = await apiClient.get('/me/favorites/');
+    return Array.isArray(response.data) ? response.data : (response.data?.results ?? []);
   }
 }
 

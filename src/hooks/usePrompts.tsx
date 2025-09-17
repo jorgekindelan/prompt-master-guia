@@ -73,9 +73,10 @@ export function PromptsProvider({ children }: { children: React.ReactNode }) {
   const fetchPrompts = async (filters: PromptFilters = {}) => {
     try {
       const data = await promptService.list(filters);
-      setPrompts(data);
+      setPrompts(Array.isArray(data) ? data : []);
     } catch (error: any) {
       console.error('Error fetching prompts:', error);
+      setPrompts([]); // Set empty array on error
       toast({
         title: "Error al cargar prompts",
         description: error.message || "No se pudieron cargar los prompts",
