@@ -1,10 +1,17 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Moon, Sun, Brain, User, LogOut, LayoutDashboard } from "lucide-react";
+import { Menu, X, Moon, Sun, Brain, User, LogOut, LayoutDashboard, ChevronDown } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation, useNavigate } from "react-router-dom";
 import AuthDialog from "./auth/AuthDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -92,18 +99,29 @@ const Header = () => {
           <div className="flex items-center space-x-2">
             {user ? (
               <div className="hidden md:flex items-center space-x-2">
-                <span className="text-sm text-muted-foreground">
-                  Hola, {user.user_metadata?.display_name || user.email}
-                </span>
-                <Button
-                  variant="ghost"
-                  onClick={signOut}
-                  disabled={loading}
-                  className="flex items-center space-x-2 hover:bg-muted"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Salir</span>
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="flex items-center space-x-2 hover:bg-muted"
+                    >
+                      <User className="h-4 w-4" />
+                      <span>{user.user_metadata?.display_name || user.name || "Cuenta"}</span>
+                      <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                      <LayoutDashboard className="h-4 w-4 mr-2" />
+                      Dashboard
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={signOut} disabled={loading}>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Cerrar sesión
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             ) : (
               <Button
