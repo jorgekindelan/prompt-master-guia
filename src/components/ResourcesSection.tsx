@@ -1,63 +1,54 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Book, Wrench, Globe, Users, Sparkles, Star } from "lucide-react";
+import { ExternalLink, Book, Sparkles } from "lucide-react";
 
 const ResourcesSection = () => {
+  const getPricingColor = (price: string) => {
+    switch (price) {
+      case "Gratis": return "bg-emerald-500 text-white";
+      case "Freemium": return "bg-amber-500 text-white";
+      case "Pago": return "bg-red-500 text-white";
+      default: return "bg-gray-500 text-white";
+    }
+  };
+
   const aiModels = [
     {
       name: "ChatGPT",
       description: "El modelo conversacional más popular de OpenAI",
       url: "https://chat.openai.com",
-      type: "Plataforma",
-      price: "Freemium",
-      rating: 4.8,
-      features: ["Conversación natural", "Código", "Análisis de texto", "Creatividad"]
+      price: "Freemium"
     },
     {
       name: "Claude",
       description: "IA de Anthropic enfocada en seguridad y utilidad",
       url: "https://claude.ai",
-      type: "Plataforma",
-      price: "Freemium",
-      rating: 4.7,
-      features: ["Análisis profundo", "Documentos largos", "Programación", "Investigación"]
+      price: "Freemium"
     },
     {
       name: "Gemini",
       description: "Modelo multimodal avanzado de Google",
       url: "https://gemini.google.com",
-      type: "Plataforma",
-      price: "Gratis",
-      rating: 4.6,
-      features: ["Multimodal", "Integración Google", "Búsqueda en tiempo real", "Análisis visual"]
+      price: "Gratis"
     },
     {
       name: "Perplexity AI",
       description: "Motor de búsqueda conversacional con fuentes",
       url: "https://perplexity.ai",
-      type: "Buscador IA",
-      price: "Freemium",
-      rating: 4.5,
-      features: ["Búsqueda con fuentes", "Información actualizada", "Citas precisas", "Investigación"]
+      price: "Freemium"
     },
     {
       name: "Microsoft Copilot",
       description: "Asistente IA integrado en el ecosistema Microsoft",
       url: "https://copilot.microsoft.com",
-      type: "Plataforma",
-      price: "Freemium",
-      rating: 4.4,
-      features: ["Integración Office", "Búsqueda mejorada", "Productividad", "Análisis datos"]
+      price: "Freemium"
     },
     {
       name: "Meta AI",
       description: "Asistente de Meta para redes sociales y creatividad",
       url: "https://www.meta.ai",
-      type: "Plataforma", 
-      price: "Gratis",
-      rating: 4.3,
-      features: ["Creatividad visual", "Redes sociales", "Generación imágenes", "Conversación"]
+      price: "Gratis"
     }
   ];
 
@@ -97,62 +88,31 @@ const ResourcesSection = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {aiModels.map((model, index) => (
-              <Card key={model.name} className="shadow-card-custom hover:shadow-elegant transition-all duration-300">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg mb-1">{model.name}</CardTitle>
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Badge variant="outline" className="text-xs">
-                          {model.type}
-                        </Badge>
-                        <Badge 
-                          variant={model.price === "Gratis" ? "default" : "secondary"} 
-                          className="text-xs"
-                        >
-                          {model.price}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-1 text-sm">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-muted-foreground">{model.rating}</span>
-                    </div>
+            {aiModels.map((model) => (
+              <Card key={model.name} className="shadow-card-custom hover:shadow-elegant transition-all duration-300 flex flex-col h-full">
+                <CardHeader className="flex-grow">
+                  <div className="flex items-start justify-between mb-3">
+                    <CardTitle className="text-lg">{model.name}</CardTitle>
+                    <Badge className={`${getPricingColor(model.price)} font-semibold`}>
+                      {model.price}
+                    </Badge>
                   </div>
                   <CardDescription className="text-sm leading-relaxed">
                     {model.description}
                   </CardDescription>
                 </CardHeader>
 
-                <CardContent>
-                  <div className="space-y-4">
-                    {/* Features */}
-                    <div className="flex flex-wrap gap-1">
-                      {model.features.slice(0, 3).map((feature) => (
-                        <Badge key={feature} variant="secondary" className="text-xs">
-                          {feature}
-                        </Badge>
-                      ))}
-                      {model.features.length > 3 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{model.features.length - 3} más
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Action Button */}
-                    <Button 
-                      variant="outline" 
-                      className="w-full hover:bg-primary/10"
-                      asChild
-                    >
-                      <a href={model.url} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Probar
-                      </a>
-                    </Button>
-                  </div>
+                <CardContent className="pt-0">
+                  <Button 
+                    variant="outline" 
+                    className="w-full hover:bg-primary/10"
+                    asChild
+                  >
+                    <a href={model.url} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Probar
+                    </a>
+                  </Button>
                 </CardContent>
               </Card>
             ))}
