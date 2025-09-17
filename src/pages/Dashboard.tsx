@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { usePrompts } from "@/hooks/usePrompts";
 import { usePaginatedPrompts } from "@/hooks/usePaginatedPrompts";
 import { useToast } from "@/hooks/use-toast";
+import { promptService } from "@/lib/services/promptService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -76,26 +77,25 @@ const Dashboard = () => {
   }
 
   const handleCreatePrompt = async () => {
-    if (!newPrompt.title || !newPrompt.body) {
+    if (!newPrompt.title || !newPrompt.body || !newPrompt.difficulty) {
       toast({
         title: "Error",
-        description: "El título y el contenido son obligatorios",
+        description: "El título, dificultad y contenido son obligatorios",
         variant: "destructive"
       });
       return;
     }
 
-    // Convert to legacy format for existing hook
-    const legacyData = {
-      title: newPrompt.title,
-      content: newPrompt.body,
-      tags: newPrompt.tags.map(tag => tag.name),
-      is_public: true,
-      description: ""
-    };
+    try {
+      const promptData = {
+        title: newPrompt.title,
+        difficulty: newPrompt.difficulty,
+        body: newPrompt.body,
+        tags: newPrompt.tags
+      };
 
-    const success = await createPrompt(legacyData);
-    if (success) {
+      await promptService.create(promptData);
+      
       setIsCreateDialogOpen(false);
       setNewPrompt({
         title: "",
@@ -103,7 +103,20 @@ const Dashboard = () => {
         body: "",
         tags: []
       });
+      
       myPromptsData.refresh();
+      
+      toast({
+        title: "¡Prompt creado!",
+        description: "Tu prompt ha sido creado exitosamente"
+      });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || error.message;
+      toast({
+        title: "Error al crear prompt",
+        description: errorMessage,
+        variant: "destructive"
+      });
     }
   };
 
@@ -119,42 +132,89 @@ const Dashboard = () => {
   };
 
   const handleUpdatePrompt = async () => {
-    if (!editingPrompt || !editingPrompt.title || !editingPrompt.body) {
+    if (!editingPrompt || !editingPrompt.title || !editingPrompt.body || !editingPrompt.difficulty) {
       toast({
         title: "Error",
-        description: "El título y el contenido son obligatorios",
+        description: "El título, dificultad y contenido son obligatorios",
         variant: "destructive"
       });
       return;
     }
 
-    // Convert to legacy format
-    const legacyData = {
-      title: editingPrompt.title,
-      content: editingPrompt.body,
-      tags: editingPrompt.tags.map(tag => tag.name)
-    };
+    try {
+      const updateData = {
+        title: editingPrompt.title,
+        difficulty: editingPrompt.difficulty,
+        body: editingPrompt.body,
+        tags: editingPrompt.tags
+      };
 
-    const success = await updatePrompt(editingPrompt.id.toString(), legacyData);
-    if (success) {
+      await promptService.update(editingPrompt.id, updateData);
+      
       setIsEditDialogOpen(false);
       setEditingPrompt(null);
       myPromptsData.refresh();
+      
+      toast({
+        title: "Prompt actualizado",
+        description: "Tu prompt ha sido actualizado exitosamente"
+      });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || error.message;
+      toast({
+        title: "Error al actualizar prompt",
+        description: errorMessage,
+        variant: "destructive"
+      });
     }
   };
 
   const handleDeletePrompt = async (id: number) => {
-    const success = await deletePrompt(id.toString());
-    if (success) {
+    try {
+      await promptService.remove(id);
       myPromptsData.refresh();
+      toast({
+        title: "Prompt eliminado",
+        description: "Tu prompt ha sido eliminado exitosamente"
+      });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || error.message;
+      toast({
+        title: "Error al eliminar prompt",
+        description: errorMessage,
+        variant: "destructive"
+      });
     }
   };
 
   const handleToggleFavorite = async (id: number) => {
-    const success = await toggleFavorite(id.toString());
-    if (success) {
-      favoritesData.refresh();
-      myPromptsData.refresh();
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "Debes iniciar sesión para guardar favoritos",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Use optimistic toggle from the current active data source
+      const currentData = getCurrentData();
+      await currentData.toggleFavoriteOptimistic(id);
+      
+      // Refresh the other section to keep consistency
+      if (activeTab === 'mine') {
+        favoritesData.refresh();
+      } else {
+        myPromptsData.refresh();
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || error.message;
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
     }
   };
 

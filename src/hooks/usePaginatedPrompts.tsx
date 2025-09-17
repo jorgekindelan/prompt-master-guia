@@ -23,6 +23,7 @@ interface UsePaginatedPromptsReturn {
   setPage: (page: number) => void;
   refresh: () => void;
   retry: () => void;
+  toggleFavoriteOptimistic: (promptId: number) => Promise<boolean>;
 }
 
 export function usePaginatedPrompts(
@@ -99,6 +100,74 @@ export function usePaginatedPrompts(
     fetchData(currentPage);
   };
 
+  const toggleFavoriteOptimistic = async (promptId: number): Promise<boolean> => {
+    // Find the prompt in current results
+    const prompt = data.results.find(p => p.id === promptId);
+    if (!prompt) return false;
+
+    const isCurrentlyFavorited = prompt.is_favorited;
+
+    // Optimistic update
+    setData(prev => ({
+      ...prev,
+      results: prev.results.map(p =>
+        p.id === promptId
+          ? {
+              ...p,
+              is_favorited: !isCurrentlyFavorited,
+              favorites_count: isCurrentlyFavorited 
+                ? (p.favorites_count || 0) - 1 
+                : (p.favorites_count || 0) + 1
+            }
+          : p
+      )
+    }));
+
+    // If we're in favorites view and unfavoriting, remove from list
+    if (type === 'favorites' && isCurrentlyFavorited) {
+      setData(prev => ({
+        ...prev,
+        results: prev.results.filter(p => p.id !== promptId),
+        count: prev.count - 1
+      }));
+    }
+
+    try {
+      if (isCurrentlyFavorited) {
+        await promptService.unfavorite(promptId);
+      } else {
+        await promptService.favorite(promptId);
+      }
+      return true;
+    } catch (error: any) {
+      // Revert optimistic update on error
+      if (type === 'favorites' && isCurrentlyFavorited) {
+        // Add back to list if we removed it
+        setData(prev => ({
+          ...prev,
+          results: [...prev.results, prompt],
+          count: prev.count + 1
+        }));
+      } else {
+        // Revert the toggle
+        setData(prev => ({
+          ...prev,
+          results: prev.results.map(p =>
+            p.id === promptId
+              ? {
+                  ...p,
+                  is_favorited: isCurrentlyFavorited,
+                  favorites_count: prompt.favorites_count || 0
+                }
+              : p
+          )
+        }));
+      }
+      
+      throw error;
+    }
+  };
+
   // Handle page deletion scenario
   const handleEmptyPageRedirect = () => {
     if (data.results.length === 0 && currentPage > 1 && totalPages > 0) {
@@ -125,6 +194,7 @@ export function usePaginatedPrompts(
     hasPrevious: !!data.previous,
     setPage,
     refresh,
-    retry
+    retry,
+    toggleFavoriteOptimistic
   };
 }

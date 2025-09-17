@@ -87,7 +87,7 @@ export const PromptCard = ({
               <Heart 
                 className={`h-4 w-4 ${
                   prompt.is_favorited 
-                    ? 'fill-primary text-primary' 
+                    ? 'fill-red-500 text-red-500' 
                     : 'text-muted-foreground'
                 }`} 
               />
@@ -157,9 +157,6 @@ export const PromptCard = ({
                 <span>❤️ {prompt.favorites_count ?? 0}</span>
                 <span>👁️ {prompt.view_count ?? 0}</span>
               </>
-            )}
-            {variant === 'dashboard' && (
-              <span>❤️ {prompt.favorites_count ?? 0}</span>
             )}
           </div>
           <Button
