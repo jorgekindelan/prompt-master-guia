@@ -51,19 +51,20 @@ const Dashboard = () => {
 
   const filteredPrompts = prompts.filter(prompt => {
     const matchesSearch = prompt.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         prompt.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         prompt.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+                         prompt.body?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         prompt.tags.some(tag => tag.name.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesCategory = selectedCategory === "all" || prompt.category_id === selectedCategory;
+    // Since Django doesn't have categories, we'll always match category filter
+    const matchesCategory = selectedCategory === "all" || true;
     
     return matchesSearch && matchesCategory;
   });
 
-  const myPrompts = filteredPrompts.filter(prompt => prompt.user_id === user?.id);
-  const publicPrompts = filteredPrompts.filter(prompt => prompt.is_public && prompt.user_id !== user?.id);
+  const myPrompts = filteredPrompts.filter(prompt => prompt.owner.id === user?.id);
+  const publicPrompts = filteredPrompts.filter(prompt => prompt.owner.id !== user?.id);
 
   const handleCreatePrompt = async () => {
-    if (!newPrompt.title || !newPrompt.content || !newPrompt.category_id) {
+    if (!newPrompt.title || !newPrompt.content) {
       return;
     }
 
@@ -75,7 +76,7 @@ const Dashboard = () => {
         description: "",
         content: "",
         tags: [],
-        category_id: "",
+        category_id: "1", // default category
         is_public: true
       });
     }

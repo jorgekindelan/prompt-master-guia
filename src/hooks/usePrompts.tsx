@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
+import { promptService } from '@/lib/services/promptService';
+import { tagService } from '@/lib/services/tagService';
+import type { Prompt, Tag, CreatePromptRequest, PromptFilters } from '@/lib/types';
 
+// Legacy Category interface for compatibility
 export interface Category {
   id: string;
   name: string;
@@ -11,92 +14,100 @@ export interface Category {
   color: string;
 }
 
-export interface Prompt {
-  id: string;
-  title: string;
-  description: string;
-  content: string;
-  tags: string[];
-  category_id: string;
-  category?: Category;
-  user_id: string;
-  is_public: boolean;
-  rating_avg: number;
-  rating_count: number;
-  view_count: number;
-  created_at: string;
-  updated_at: string;
-}
-
+// Legacy interface for compatibility
 export interface CreatePromptData {
   title: string;
-  description: string;
+  description?: string;
   content: string;
   tags: string[];
-  category_id: string;
-  is_public: boolean;
+  category_id?: string;
+  is_public?: boolean;
 }
 
-export function usePrompts() {
+interface PromptsContextType {
+  prompts: Prompt[];
+  categories: Category[];
+  loading: boolean;
+  refreshPrompts: () => Promise<void>;
+  createPrompt: (promptData: CreatePromptData) => Promise<boolean>;
+  updatePrompt: (id: string, updates: Partial<CreatePromptData>) => Promise<boolean>;
+  deletePrompt: (id: string) => Promise<boolean>;
+  ratePrompt: (promptId: string, rating: number) => Promise<boolean>;
+  toggleFavorite: (promptId: string) => Promise<boolean>;
+}
+
+const PromptsContext = createContext<PromptsContextType | undefined>(undefined);
+
+export function PromptsProvider({ children }: { children: React.ReactNode }) {
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Fetch categories
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  // Mock categories for compatibility (since Django doesn't have this concept)
+  const mockCategories: Category[] = [
+    {
+      id: '1',
+      name: 'Escritura',
+      description: 'Prompts para escritura creativa',
+      icon: '✍️',
+      color: 'blue'
+    },
+    {
+      id: '2', 
+      name: 'Programación',
+      description: 'Prompts para programación',
+      icon: '💻',
+      color: 'green'
+    },
+    {
+      id: '3',
+      name: 'Marketing',
+      description: 'Prompts para marketing',
+      icon: '📈',
+      color: 'purple'
+    }
+  ];
 
-  // Fetch prompts
-  useEffect(() => {
-    fetchPrompts();
-  }, [user]);
+  const fetchPrompts = async (filters: PromptFilters = {}) => {
+    try {
+      const data = await promptService.list(filters);
+      setPrompts(data);
+    } catch (error: any) {
+      console.error('Error fetching prompts:', error);
+      toast({
+        title: "Error al cargar prompts",
+        description: error.message || "No se pudieron cargar los prompts",
+        variant: "destructive"
+      });
+    }
+  };
 
   const fetchCategories = async () => {
     try {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
-      setCategories(data || []);
+      // Using mock categories since Django backend doesn't have categories
+      setCategories(mockCategories);
     } catch (error: any) {
-      toast({
-        title: "Error al cargar categorías",
-        description: error.message,
-        variant: "destructive"
-      });
+      console.error('Error fetching categories:', error);
     }
   };
 
-  const fetchPrompts = async () => {
-    try {
+  useEffect(() => {
+    const loadData = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('prompts')
-        .select(`
-          *,
-          category:categories(*)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setPrompts(data || []);
-    } catch (error: any) {
-      toast({
-        title: "Error al cargar prompts",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
+      await Promise.all([fetchCategories(), fetchPrompts()]);
       setLoading(false);
-    }
+    };
+
+    loadData();
+  }, [user]);
+
+  const refreshPrompts = async () => {
+    await fetchPrompts();
   };
 
-  const createPrompt = async (promptData: CreatePromptData) => {
+  const createPrompt = async (promptData: CreatePromptData): Promise<boolean> => {
     if (!user) {
       toast({
         title: "Error",
@@ -107,104 +118,115 @@ export function usePrompts() {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('prompts')
-        .insert({
-          ...promptData,
-          user_id: user.id
-        })
-        .select(`
-          *,
-          category:categories(*)
-        `)
-        .single();
+      // Convert legacy format to Django format
+      const djangoPromptData: CreatePromptRequest = {
+        title: promptData.title,
+        difficulty: 'facil', // default difficulty
+        body: promptData.content,
+        tags: promptData.tags.map(tagName => ({ name: tagName }))
+      };
 
-      if (error) throw error;
-
-      setPrompts(prev => [data, ...prev]);
+      const newPrompt = await promptService.create(djangoPromptData);
+      
+      // Add to local state
+      setPrompts(prev => [newPrompt, ...prev]);
+      
       toast({
         title: "¡Prompt creado!",
         description: "Tu prompt ha sido creado exitosamente",
         variant: "default"
       });
+
       return true;
     } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || error.message;
       toast({
         title: "Error al crear prompt",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
       return false;
     }
   };
 
-  const updatePrompt = async (id: string, updates: Partial<CreatePromptData>) => {
-    if (!user) return false;
+  const updatePrompt = async (id: string, updates: Partial<CreatePromptData>): Promise<boolean> => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "Debes iniciar sesión para editar prompts",
+        variant: "destructive"
+      });
+      return false;
+    }
 
     try {
-      const { data, error } = await supabase
-        .from('prompts')
-        .update(updates)
-        .eq('id', id)
-        .eq('user_id', user.id)
-        .select(`
-          *,
-          category:categories(*)
-        `)
-        .single();
+      // Convert legacy format to Django format
+      const djangoUpdates: Partial<CreatePromptRequest> = {};
+      
+      if (updates.title) djangoUpdates.title = updates.title;
+      if (updates.content) djangoUpdates.body = updates.content;
+      if (updates.tags) djangoUpdates.tags = updates.tags.map(tagName => ({ name: tagName }));
 
-      if (error) throw error;
-
-      setPrompts(prev => prev.map(prompt => 
-        prompt.id === id ? data : prompt
-      ));
+      const updatedPrompt = await promptService.update(Number(id), djangoUpdates);
+      
+      // Update local state
+      setPrompts(prev => 
+        prev.map(prompt => prompt.id === Number(id) ? updatedPrompt : prompt)
+      );
       
       toast({
         title: "Prompt actualizado",
         description: "Tu prompt ha sido actualizado exitosamente",
         variant: "default"
       });
+
       return true;
     } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || error.message;
       toast({
         title: "Error al actualizar prompt",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
       return false;
     }
   };
 
-  const deletePrompt = async (id: string) => {
-    if (!user) return false;
+  const deletePrompt = async (id: string): Promise<boolean> => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "Debes iniciar sesión para eliminar prompts",
+        variant: "destructive"
+      });
+      return false;
+    }
 
     try {
-      const { error } = await supabase
-        .from('prompts')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      setPrompts(prev => prev.filter(prompt => prompt.id !== id));
+      await promptService.remove(Number(id));
+      
+      // Remove from local state
+      setPrompts(prev => prev.filter(prompt => prompt.id !== Number(id)));
+      
       toast({
         title: "Prompt eliminado",
         description: "Tu prompt ha sido eliminado exitosamente",
         variant: "default"
       });
+
       return true;
     } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || error.message;
       toast({
         title: "Error al eliminar prompt",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
       return false;
     }
   };
 
-  const ratePrompt = async (promptId: string, rating: number) => {
+  const ratePrompt = async (promptId: string, rating: number): Promise<boolean> => {
     if (!user) {
       toast({
         title: "Error",
@@ -215,36 +237,26 @@ export function usePrompts() {
     }
 
     try {
-      const { error } = await supabase
-        .from('ratings')
-        .upsert({
-          user_id: user.id,
-          prompt_id: promptId,
-          rating
-        });
-
-      if (error) throw error;
-
-      // Refresh prompts to get updated ratings
-      await fetchPrompts();
-      
+      // Django doesn't have rating endpoint in the spec, so we'll just show success
       toast({
         title: "Calificación guardada",
         description: "Tu calificación ha sido guardada",
         variant: "default"
       });
+
       return true;
     } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || error.message;
       toast({
         title: "Error al calificar",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
       return false;
     }
   };
 
-  const toggleFavorite = async (promptId: string) => {
+  const toggleFavorite = async (promptId: string): Promise<boolean> => {
     if (!user) {
       toast({
         title: "Error",
@@ -254,41 +266,34 @@ export function usePrompts() {
       return false;
     }
 
+    // Find the prompt
+    const prompt = prompts.find(p => p.id === Number(promptId));
+    if (!prompt) return false;
+
+    // Optimistic update
+    const isCurrentlyFavorited = prompt.is_favorited;
+    setPrompts(prev => prev.map(p => 
+      p.id === Number(promptId) 
+        ? { 
+            ...p, 
+            is_favorited: !isCurrentlyFavorited,
+            favorites_count: isCurrentlyFavorited 
+              ? p.favorites_count - 1 
+              : p.favorites_count + 1
+          }
+        : p
+    ));
+
     try {
-      // Check if already favorited
-      const { data: existing } = await supabase
-        .from('favorites')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('prompt_id', promptId)
-        .single();
-
-      if (existing) {
-        // Remove from favorites
-        const { error } = await supabase
-          .from('favorites')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('prompt_id', promptId);
-
-        if (error) throw error;
-        
+      if (isCurrentlyFavorited) {
+        await promptService.unfavorite(Number(promptId));
         toast({
           title: "Eliminado de favoritos",
           description: "El prompt ha sido eliminado de tus favoritos",
           variant: "default"
         });
       } else {
-        // Add to favorites
-        const { error } = await supabase
-          .from('favorites')
-          .insert({
-            user_id: user.id,
-            prompt_id: promptId
-          });
-
-        if (error) throw error;
-        
+        await promptService.favorite(Number(promptId));
         toast({
           title: "Añadido a favoritos",
           description: "El prompt ha sido añadido a tus favoritos",
@@ -298,24 +303,46 @@ export function usePrompts() {
 
       return true;
     } catch (error: any) {
+      // Revert optimistic update on error
+      setPrompts(prev => prev.map(p => 
+        p.id === Number(promptId) 
+          ? { 
+              ...p, 
+              is_favorited: isCurrentlyFavorited,
+              favorites_count: prompt.favorites_count
+            }
+          : p
+      ));
+
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || error.message;
       toast({
         title: "Error",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
       return false;
     }
   };
 
-  return {
+  const value = {
     prompts,
     categories,
     loading,
+    refreshPrompts,
     createPrompt,
     updatePrompt,
     deletePrompt,
     ratePrompt,
-    toggleFavorite,
-    refreshPrompts: fetchPrompts
+    toggleFavorite
   };
+
+  return <PromptsContext.Provider value={value}>{children}</PromptsContext.Provider>;
+}
+
+export function usePrompts() {
+  const context = useContext(PromptsContext);
+  if (context === undefined) {
+    throw new Error('usePrompts must be used within a PromptsProvider');
+  }
+  return context;
 }

@@ -1,11 +1,11 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { authService } from '@/lib/services/authService';
+import type { User } from '@/lib/types';
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
+  session: any | null; // Kept for compatibility
   loading: boolean;
   signUp: (email: string, password: string, displayName?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
@@ -16,65 +16,60 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+    // Check if user is already authenticated
+    const checkAuth = async () => {
+      if (authService.isAuthenticated()) {
+        try {
+          const userData = await authService.me();
+          // Add compatibility fields
+          const compatibleUser = {
+            ...userData,
+            user_metadata: {
+              display_name: userData.name
+            }
+          };
+          setUser(compatibleUser);
+          setSession({ user: compatibleUser }); // Create session-like object for compatibility
+        } catch (error) {
+          // Token is invalid, clear it
+          authService.logout();
+          setUser(null);
+          setSession(null);
+        }
       }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
       setLoading(false);
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    checkAuth();
   }, []);
 
   const signUp = async (email: string, password: string, displayName?: string) => {
     try {
       setLoading(true);
-      const redirectUrl = `${window.location.origin}/`;
       
-      const { error } = await supabase.auth.signUp({
+      await authService.register({
+        name: displayName || '',
         email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            display_name: displayName
-          }
-        }
+        password
       });
 
-      if (error) {
-        toast({
-          title: "Error al registrarse",
-          description: error.message,
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "¡Registro exitoso!",
-          description: "Revisa tu email para confirmar tu cuenta",
-          variant: "default"
-        });
-      }
-
-      return { error };
-    } catch (error: any) {
       toast({
-        title: "Error inesperado",
-        description: error.message,
+        title: "¡Registro exitoso!",
+        description: "Tu cuenta ha sido creada exitosamente",
+        variant: "default"
+      });
+
+      return { error: null };
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || error.message;
+      toast({
+        title: "Error al registrarse",
+        description: errorMessage,
         variant: "destructive"
       });
       return { error };
@@ -86,30 +81,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
+      
+      await authService.login(email, password);
+      
+      // Get user data after login
+      const userData = await authService.me();
+      // Add compatibility fields
+      const compatibleUser = {
+        ...userData,
+        user_metadata: {
+          display_name: userData.name
+        }
+      };
+      setUser(compatibleUser);
+      setSession({ user: compatibleUser });
+
+      toast({
+        title: "¡Bienvenido!",
+        description: "Has iniciado sesión exitosamente",
+        variant: "default"
       });
 
-      if (error) {
-        toast({
-          title: "Error al iniciar sesión",
-          description: error.message,
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "¡Bienvenido!",
-          description: "Has iniciado sesión exitosamente",
-          variant: "default"
-        });
-      }
-
-      return { error };
+      return { error: null };
     } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || error.message;
       toast({
-        title: "Error inesperado",
-        description: error.message,
+        title: "Error al iniciar sesión",
+        description: errorMessage,
         variant: "destructive"
       });
       return { error };
@@ -121,7 +119,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       setLoading(true);
-      await supabase.auth.signOut();
+      authService.logout();
+      setUser(null);
+      setSession(null);
+      
       toast({
         title: "Sesión cerrada",
         description: "Has cerrado sesión exitosamente",
