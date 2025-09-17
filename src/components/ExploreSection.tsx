@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Copy, Heart, Star, Filter, TrendingUp } from "lucide-react";
+import { Search, Copy, Heart, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const ExploreSection = () => {
@@ -360,12 +360,7 @@ Organiza todo en formato fácil de seguir con mapas sugeridos y enlaces útiles.
             >
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg mb-2">{promptItem.title}</CardTitle>
-                    <CardDescription className="text-sm">
-                      {promptItem.description}
-                    </CardDescription>
-                  </div>
+                  <CardTitle className="text-lg mb-4">{promptItem.title}</CardTitle>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -382,83 +377,34 @@ Organiza todo en formato fácil de seguir con mapas sugeridos y enlaces útiles.
                   </Button>
                 </div>
 
-                {/* Stats */}
-                <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                  <div className="flex items-center space-x-1">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span>{promptItem.rating}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <TrendingUp className="h-4 w-4" />
-                    <span>{promptItem.uses.toLocaleString()} usos</span>
-                  </div>
-                </div>
-
-                {/* Tags and Difficulty */}
-                <div className="flex flex-wrap gap-2">
-                  <Badge 
-                    variant="secondary" 
-                    className={`${getDifficultyColor(promptItem.difficulty)} text-white`}
-                  >
-                    {promptItem.difficulty}
-                  </Badge>
-                  {promptItem.tags.slice(0, 2).map((tag) => (
+                {/* Tags */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {promptItem.tags.map((tag) => (
                     <Badge key={tag} variant="outline" className="text-xs">
                       {tag}
                     </Badge>
                   ))}
-                  {promptItem.tags.length > 2 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{promptItem.tags.length - 2} más
-                    </Badge>
-                  )}
                 </div>
               </CardHeader>
 
               <CardContent>
                 <div className="space-y-4">
-                  {/* Prompt Preview */}
-                  <div className="bg-muted/50 rounded-lg p-3 max-h-32 overflow-hidden relative">
-                    <pre className="text-xs font-mono text-foreground whitespace-pre-wrap leading-relaxed">
-                      {promptItem.prompt.substring(0, 200)}...
+                  {/* Full Prompt */}
+                  <div className="bg-muted/50 rounded-lg p-4">
+                    <pre className="text-sm font-mono text-foreground whitespace-pre-wrap leading-relaxed">
+                      {promptItem.prompt}
                     </pre>
-                    <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-muted/80 to-transparent"></div>
                   </div>
 
-                   {/* Action Buttons */}
-                   <div className="flex space-x-2">
-                     <Button 
-                       onClick={() => copyPrompt(promptItem.prompt, promptItem.title)}
-                       className="flex-1 bg-primary hover:bg-primary/90"
-                       size="sm"
-                     >
-                       <Copy className="h-4 w-4 mr-2" />
-                       Copiar
-                     </Button>
-                     <Button 
-                       variant="outline" 
-                       size="sm"
-                       className="hover:bg-primary/10"
-                       onClick={() => {
-                         const shareText = `Descubre este prompt útil: "${promptItem.title}"\n\n${promptItem.description}`;
-                         if (navigator.share) {
-                           navigator.share({
-                             title: promptItem.title,
-                             text: shareText,
-                             url: window.location.href
-                           });
-                         } else {
-                           navigator.clipboard.writeText(shareText);
-                           toast({
-                             title: "¡Enlace copiado!",
-                             description: "Compartir prompt copiado al portapapeles"
-                           });
-                         }
-                       }}
-                     >
-                       Compartir
-                     </Button>
-                   </div>
+                   {/* Action Button */}
+                   <Button 
+                     onClick={() => copyPrompt(promptItem.prompt, promptItem.title)}
+                     className="w-full bg-primary hover:bg-primary/90"
+                     size="sm"
+                   >
+                     <Copy className="h-4 w-4 mr-2" />
+                     Copiar Prompt
+                   </Button>
                 </div>
               </CardContent>
             </Card>
