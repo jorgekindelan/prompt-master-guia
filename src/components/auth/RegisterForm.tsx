@@ -15,7 +15,7 @@ interface RegisterFormProps {
 }
 
 const RegisterForm = ({ onSwitchToLogin, onClose }: RegisterFormProps) => {
-  const { signUp, loading } = useAuth();
+  const { signUp, signIn, loading } = useAuth();
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
@@ -55,6 +55,8 @@ const RegisterForm = ({ onSwitchToLogin, onClose }: RegisterFormProps) => {
     const { error } = await signUp(formData.email, formData.password, formData.name);
     
     if (!error) {
+      // Auto login after successful registration
+      await signIn(formData.email, formData.password);
       onClose();
     }
   };
