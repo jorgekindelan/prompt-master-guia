@@ -58,9 +58,14 @@ export const PromptCard = ({
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 pr-2">
             <CardTitle className="text-lg mb-2">{prompt.title}</CardTitle>
-            <div className="text-sm text-muted-foreground mb-3">
+            <div className="text-sm text-muted-foreground mb-2">
               por {prompt.owner?.name || 'Anónimo'}
             </div>
+            <Badge 
+              className={`${getDifficultyColor(prompt.difficulty)} font-semibold inline-block`}
+            >
+              {getDifficultyIcon(prompt.difficulty)} {prompt.difficulty}
+            </Badge>
           </div>
           <div className="flex items-center gap-1 shrink-0">
             {variant === 'dashboard' && isOwner && onEdit && (
