@@ -55,8 +55,13 @@ export const PromptCard = ({
   return (
     <Card className="shadow-card-custom hover:shadow-elegant transition-all duration-300 flex flex-col h-full">
       <CardHeader>
-        <div className="flex items-start justify-between">
-          <CardTitle className="text-lg mb-4 flex-1 pr-2">{prompt.title}</CardTitle>
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1 pr-2">
+            <CardTitle className="text-lg mb-2">{prompt.title}</CardTitle>
+            <div className="text-sm text-muted-foreground mb-3">
+              por {prompt.owner?.name || 'Anónimo'}
+            </div>
+          </div>
           <div className="flex items-center gap-1 shrink-0">
             {variant === 'dashboard' && isOwner && onEdit && (
               <Button
@@ -93,18 +98,6 @@ export const PromptCard = ({
               />
             </Button>
           </div>
-        </div>
-
-        {/* Difficulty and Owner Indicators */}
-        <div className="flex items-center gap-3 mb-4">
-          <Badge 
-            className={`${getDifficultyColor(prompt.difficulty)} font-semibold`}
-          >
-            {getDifficultyIcon(prompt.difficulty)} {prompt.difficulty}
-          </Badge>
-          <Badge variant="outline" className="font-medium">
-            {prompt.owner?.name || 'Anónimo'}
-          </Badge>
         </div>
 
         {/* Tags */}
@@ -150,15 +143,7 @@ export const PromptCard = ({
         </div>
 
         {/* Stats and Actions */}
-        <div className="flex items-center justify-between text-sm text-muted-foreground pt-4 border-t mt-4">
-          <div className="flex items-center space-x-4">
-            {variant === 'explore' && (
-              <>
-                <span>❤️ {prompt.favorites_count ?? 0}</span>
-                <span>👁️ {prompt.view_count ?? 0}</span>
-              </>
-            )}
-          </div>
+        <div className="flex items-center justify-end text-sm text-muted-foreground pt-4 border-t mt-4">
           <Button
             variant="outline"
             size="sm"
