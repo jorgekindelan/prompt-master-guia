@@ -13,6 +13,7 @@ const ExploreSection = () => {
   const [selectedCategory, setSelectedCategory] = useState("todos");
   const [selectedDifficulty, setSelectedDifficulty] = useState("todos");
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
+  const [expandedPrompts, setExpandedPrompts] = useState<Set<number>>(new Set());
 
   const prompts = [
     {
@@ -270,12 +271,43 @@ Organiza todo en formato fácil de seguir con mapas sugeridos y enlaces útiles.
     setFavorites(newFavorites);
   };
 
+  const toggleExpanded = (id: number) => {
+    const newExpanded = new Set(expandedPrompts);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
+    } else {
+      newExpanded.add(id);
+    }
+    setExpandedPrompts(newExpanded);
+  };
+
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case "basico": return "bg-green-500";
-      case "intermedio": return "bg-yellow-500";
-      case "avanzado": return "bg-red-500";
-      default: return "bg-gray-500";
+      case "basico": return "bg-emerald-500 text-white";
+      case "intermedio": return "bg-amber-500 text-white";
+      case "avanzado": return "bg-red-500 text-white";
+      default: return "bg-gray-500 text-white";
+    }
+  };
+
+  const getDifficultyIcon = (difficulty: string) => {
+    switch (difficulty) {
+      case "basico": return "●";
+      case "intermedio": return "●●";
+      case "avanzado": return "●●●";
+      default: return "●";
+    }
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case "negocios": return "bg-blue-100 text-blue-800 border-blue-200";
+      case "creatividad": return "bg-purple-100 text-purple-800 border-purple-200";
+      case "profesional": return "bg-green-100 text-green-800 border-green-200";
+      case "marketing": return "bg-pink-100 text-pink-800 border-pink-200";
+      case "programacion": return "bg-indigo-100 text-indigo-800 border-indigo-200";
+      case "personal": return "bg-orange-100 text-orange-800 border-orange-200";
+      default: return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
@@ -377,10 +409,34 @@ Organiza todo en formato fácil de seguir con mapas sugeridos y enlaces útiles.
                   </Button>
                 </div>
 
+                {/* Difficulty and Category Indicators */}
+                <div className="flex items-center gap-3 mb-4">
+                  <Badge 
+                    className={`${getDifficultyColor(promptItem.difficulty)} font-semibold`}
+                  >
+                    {getDifficultyIcon(promptItem.difficulty)} {promptItem.difficulty}
+                  </Badge>
+                  <Badge 
+                    variant="outline" 
+                    className={`${getCategoryColor(promptItem.category)} font-medium`}
+                  >
+                    {categories.find(c => c.value === promptItem.category)?.label || promptItem.category}
+                  </Badge>
+                </div>
+
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {promptItem.tags.map((tag) => (
-                    <Badge key={tag} variant="outline" className="text-xs">
+                  {promptItem.tags.map((tag, index) => (
+                    <Badge 
+                      key={tag} 
+                      variant="secondary" 
+                      className={`text-xs ${
+                        index % 4 === 0 ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                        index % 4 === 1 ? 'bg-green-50 text-green-700 border-green-200' :
+                        index % 4 === 2 ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                        'bg-orange-50 text-orange-700 border-orange-200'
+                      }`}
+                    >
                       {tag}
                     </Badge>
                   ))}
@@ -389,11 +445,24 @@ Organiza todo en formato fácil de seguir con mapas sugeridos y enlaces útiles.
 
               <CardContent>
                 <div className="space-y-4">
-                  {/* Full Prompt */}
+                  {/* Prompt with Show More */}
                   <div className="bg-muted/50 rounded-lg p-4">
                     <pre className="text-sm font-mono text-foreground whitespace-pre-wrap leading-relaxed">
-                      {promptItem.prompt}
+                      {expandedPrompts.has(promptItem.id) 
+                        ? promptItem.prompt 
+                        : `${promptItem.prompt.substring(0, 300)}${promptItem.prompt.length > 300 ? '...' : ''}`
+                      }
                     </pre>
+                    {promptItem.prompt.length > 300 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleExpanded(promptItem.id)}
+                        className="mt-2 text-primary hover:text-primary/80 p-0 h-auto"
+                      >
+                        {expandedPrompts.has(promptItem.id) ? 'Mostrar menos' : 'Mostrar más'}
+                      </Button>
+                    )}
                   </div>
 
                    {/* Action Button */}
