@@ -70,11 +70,14 @@ export function usePaginatedPrompts(
       setError(errorMessage);
       setData({ count: 0, next: null, previous: null, results: [] });
       
-      toast({
-        title: "Error al cargar prompts",
-        description: errorMessage,
-        variant: "destructive"
-      });
+      // Only show toast for non-401 errors to avoid spam during auth issues
+      if (err.response?.status !== 401) {
+        toast({
+          title: "Error al cargar prompts",
+          description: errorMessage,
+          variant: "destructive"
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -105,7 +108,7 @@ export function usePaginatedPrompts(
 
   useEffect(() => {
     fetchData(currentPage);
-  }, [currentPage, type, JSON.stringify(filters)]);
+  }, [currentPage, type, filters.search, filters.difficulty, filters.tag]);
 
   useEffect(() => {
     handleEmptyPageRedirect();

@@ -50,7 +50,7 @@ apiClient.interceptors.response.use(
       const refreshToken = tokenManager.getRefreshToken();
       if (!refreshToken) {
         tokenManager.clearTokens();
-        window.location.href = '/';
+        // Don't auto-redirect, let components handle 401 errors
         return Promise.reject(error);
       }
 
@@ -67,7 +67,7 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         tokenManager.clearTokens();
-        window.location.href = '/';
+        // Don't auto-redirect, let ProtectedRoute handle this
         return Promise.reject(refreshError);
       }
     }
