@@ -4,54 +4,56 @@ import { usePrompts } from "@/hooks/usePrompts";
 import { usePaginatedPrompts } from "@/hooks/usePaginatedPrompts";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, Trash2, Heart, Star, Loader2, RefreshCw, Eye, AlertCircle } from "lucide-react";
+import { Plus, Loader2, RefreshCw, AlertCircle, X } from "lucide-react";
 import { Navigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PaginationControls } from "@/components/PaginationControls";
-import { CreatePromptData } from "@/hooks/usePrompts";
+import { PromptCard } from "@/components/PromptCard";
 import { ThemeProvider } from "next-themes";
 import type { Prompt } from "@/lib/types";
 
+interface CreatePromptData {
+  title: string;
+  difficulty: 'facil' | 'media' | 'dificil';
+  body: string;
+  tags: { name: string }[];
+}
+
+interface EditPromptData extends CreatePromptData {
+  id: number;
+}
+
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
-  const { createPrompt, deletePrompt, ratePrompt, toggleFavorite } = usePrompts();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string | undefined>(undefined);
+  const { createPrompt, deletePrompt, updatePrompt, toggleFavorite } = usePrompts();
+  const { toast } = useToast();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("explore");
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("mine");
   const [newPrompt, setNewPrompt] = useState<CreatePromptData>({
     title: "",
-    description: "",
-    content: "",
-    tags: [],
-    category_id: "",
-    is_public: true
+    difficulty: "facil",
+    body: "",
+    tags: []
   });
+  const [editingPrompt, setEditingPrompt] = useState<EditPromptData | null>(null);
 
-  // Pagination hooks for different views
-  const exploreData = usePaginatedPrompts('all', { 
-    search: searchTerm, 
-    difficulty: selectedDifficulty 
-  });
+  // Pagination hooks for different views - only keep mine and favorites
   const myPromptsData = usePaginatedPrompts('mine');
   const favoritesData = usePaginatedPrompts('favorites');
 
   // Get current data based on active tab
   const getCurrentData = () => {
     switch (activeTab) {
-      case 'mine': return myPromptsData;
       case 'favorites': return favoritesData;
-      default: return exploreData;
+      default: return myPromptsData;
     }
   };
 
@@ -74,52 +76,102 @@ const Dashboard = () => {
   }
 
   const handleCreatePrompt = async () => {
-    if (!newPrompt.title || !newPrompt.content) {
+    if (!newPrompt.title || !newPrompt.body) {
+      toast({
+        title: "Error",
+        description: "El título y el contenido son obligatorios",
+        variant: "destructive"
+      });
       return;
     }
 
-    const success = await createPrompt(newPrompt);
+    // Convert to legacy format for existing hook
+    const legacyData = {
+      title: newPrompt.title,
+      content: newPrompt.body,
+      tags: newPrompt.tags.map(tag => tag.name),
+      is_public: true,
+      description: ""
+    };
+
+    const success = await createPrompt(legacyData);
     if (success) {
       setIsCreateDialogOpen(false);
       setNewPrompt({
         title: "",
-        description: "",
-        content: "",
-        tags: [],
-        category_id: "",
-        is_public: true
+        difficulty: "facil",
+        body: "",
+        tags: []
       });
-      // Refresh the appropriate data based on current tab
       myPromptsData.refresh();
-      if (newPrompt.is_public) {
-        exploreData.refresh();
-      }
     }
   };
 
-  const handleDeletePrompt = async (id: string) => {
-    const success = await deletePrompt(id);
+  const handleEditPrompt = (prompt: Prompt) => {
+    setEditingPrompt({
+      id: prompt.id,
+      title: prompt.title,
+      difficulty: prompt.difficulty,
+      body: prompt.body,
+      tags: prompt.tags ?? []
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdatePrompt = async () => {
+    if (!editingPrompt || !editingPrompt.title || !editingPrompt.body) {
+      toast({
+        title: "Error",
+        description: "El título y el contenido son obligatorios",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Convert to legacy format
+    const legacyData = {
+      title: editingPrompt.title,
+      content: editingPrompt.body,
+      tags: editingPrompt.tags.map(tag => tag.name)
+    };
+
+    const success = await updatePrompt(editingPrompt.id.toString(), legacyData);
     if (success) {
-      // Refresh the appropriate data
+      setIsEditDialogOpen(false);
+      setEditingPrompt(null);
       myPromptsData.refresh();
-      exploreData.refresh();
     }
   };
 
-  const handleToggleFavorite = async (id: string) => {
-    const success = await toggleFavorite(id);
+  const handleDeletePrompt = async (id: number) => {
+    const success = await deletePrompt(id.toString());
     if (success) {
-      // Refresh favorites and other views
+      myPromptsData.refresh();
+    }
+  };
+
+  const handleToggleFavorite = async (id: number) => {
+    const success = await toggleFavorite(id.toString());
+    if (success) {
       favoritesData.refresh();
-      exploreData.refresh();
       myPromptsData.refresh();
     }
   };
 
-  const handleTagsChange = (value: string) => {
-    const tagsArray = value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
-    setNewPrompt(prev => ({ ...prev, tags: tagsArray }));
+  const handleTagsChange = (value: string, type: 'create' | 'edit') => {
+    const tagsArray = value.split(',').map(tag => ({ name: tag.trim() })).filter(tag => tag.name.length > 0);
+    if (type === 'create') {
+      setNewPrompt(prev => ({ ...prev, tags: tagsArray }));
+    } else {
+      setEditingPrompt(prev => prev ? ({ ...prev, tags: tagsArray }) : null);
+    }
   };
+
+  const difficulties = [
+    { value: "facil", label: "Fácil" },
+    { value: "media", label: "Media" },
+    { value: "dificil", label: "Difícil" }
+  ];
 
   const renderPromptGrid = () => {
     const { prompts, loading, error, currentPage, totalPages, hasNext, hasPrevious, setPage, retry } = currentData;
@@ -149,9 +201,7 @@ const Dashboard = () => {
     if (prompts.length === 0) {
       const emptyMessage = activeTab === 'mine' 
         ? "No tienes prompts aún. ¡Crea tu primer prompt!"
-        : activeTab === 'favorites'
-        ? "No tienes prompts favoritos aún."
-        : "No hay prompts disponibles con los filtros seleccionados.";
+        : "No tienes prompts favoritos aún.";
 
       return (
         <div className="text-center py-12">
@@ -167,10 +217,11 @@ const Dashboard = () => {
             <PromptCard 
               key={prompt.id} 
               prompt={prompt} 
-              onDelete={handleDeletePrompt}
-              onRate={ratePrompt}
+              variant="dashboard"
               onToggleFavorite={handleToggleFavorite}
-              isOwner={prompt.owner?.id === user?.id}
+              onEdit={activeTab === 'mine' ? handleEditPrompt : undefined}
+              onDelete={activeTab === 'mine' ? handleDeletePrompt : undefined}
+              isOwner={activeTab === 'mine'}
             />
           ))}
         </div>
@@ -195,60 +246,21 @@ const Dashboard = () => {
           <div className="max-w-7xl mx-auto">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard</h1>
-              <p className="text-muted-foreground">Gestiona tus prompts y explora nuevos</p>
+              <p className="text-muted-foreground">Gestiona tus prompts y favoritos</p>
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="flex flex-col lg:flex-row gap-4 mb-6">
-                <TabsList className="grid w-full lg:w-auto grid-cols-3">
-                  <TabsTrigger value="explore">Explorar ({exploreData.totalCount})</TabsTrigger>
+                <TabsList className="grid w-full lg:w-auto grid-cols-2">
                   <TabsTrigger value="mine">Mis Prompts ({myPromptsData.totalCount})</TabsTrigger>
                   <TabsTrigger value="favorites">Favoritos ({favoritesData.totalCount})</TabsTrigger>
                 </TabsList>
 
-                <div className="flex flex-col sm:flex-row gap-2 flex-1">
-                  {/* Search - only for explore tab */}
-                  {activeTab === 'explore' && (
-                    <>
-                      <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Buscar prompts..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          className="pl-10"
-                        />
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <Select value={selectedDifficulty ?? undefined} onValueChange={setSelectedDifficulty}>
-                          <SelectTrigger className="w-full sm:w-[180px]">
-                            <SelectValue placeholder="Dificultad" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="facil">Fácil</SelectItem>
-                            <SelectItem value="media">Media</SelectItem>
-                            <SelectItem value="dificil">Difícil</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {selectedDifficulty && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedDifficulty(undefined)}
-                            className="shrink-0"
-                          >
-                            ✕
-                          </Button>
-                        )}
-                      </div>
-                    </>
-                  )}
-
+                <div className="flex justify-end flex-1">
                   {/* Create prompt button */}
                   <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button className="w-full sm:w-auto">
+                      <Button>
                         <Plus className="h-4 w-4 mr-2" />
                         Crear Prompt
                       </Button>
@@ -273,22 +285,30 @@ const Dashboard = () => {
                         </div>
                         
                         <div>
-                          <Label htmlFor="description">Descripción</Label>
-                          <Textarea
-                            id="description"
-                            value={newPrompt.description}
-                            onChange={(e) => setNewPrompt(prev => ({ ...prev, description: e.target.value }))}
-                            placeholder="Describe tu prompt..."
-                            rows={3}
-                          />
+                          <Label htmlFor="difficulty">Dificultad</Label>
+                          <Select 
+                            value={newPrompt.difficulty ?? undefined} 
+                            onValueChange={(value) => setNewPrompt(prev => ({ ...prev, difficulty: value as 'facil' | 'media' | 'dificil' }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona dificultad" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {difficulties.filter(d => d.value && d.value.length > 0).map((difficulty) => (
+                                <SelectItem key={difficulty.value} value={difficulty.value}>
+                                  {difficulty.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         
                         <div>
                           <Label htmlFor="content">Contenido del Prompt</Label>
                           <Textarea
                             id="content"
-                            value={newPrompt.content}
-                            onChange={(e) => setNewPrompt(prev => ({ ...prev, content: e.target.value }))}
+                            value={newPrompt.body}
+                            onChange={(e) => setNewPrompt(prev => ({ ...prev, body: e.target.value }))}
                             placeholder="Escribe aquí el prompt..."
                             rows={6}
                           />
@@ -298,19 +318,10 @@ const Dashboard = () => {
                           <Label htmlFor="tags">Tags (separados por comas)</Label>
                           <Input
                             id="tags"
-                            value={newPrompt.tags.join(', ')}
-                            onChange={(e) => handleTagsChange(e.target.value)}
+                            value={newPrompt.tags.map(tag => tag.name).join(', ')}
+                            onChange={(e) => handleTagsChange(e.target.value, 'create')}
                             placeholder="marketing, ventas, copywriting"
                           />
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="is_public"
-                            checked={newPrompt.is_public}
-                            onCheckedChange={(checked) => setNewPrompt(prev => ({ ...prev, is_public: checked as boolean }))}
-                          />
-                          <Label htmlFor="is_public">Hacer público (visible para otros usuarios)</Label>
                         </div>
                         
                         <div className="flex justify-end space-x-2">
@@ -324,13 +335,84 @@ const Dashboard = () => {
                       </div>
                     </DialogContent>
                   </Dialog>
+
+                  {/* Edit prompt dialog */}
+                  <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Editar Prompt</DialogTitle>
+                        <DialogDescription>
+                          Modifica tu prompt
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      {editingPrompt && (
+                        <div className="space-y-4">
+                          <div>
+                            <Label htmlFor="edit-title">Título</Label>
+                            <Input
+                              id="edit-title"
+                              value={editingPrompt.title}
+                              onChange={(e) => setEditingPrompt(prev => prev ? ({ ...prev, title: e.target.value }) : null)}
+                              placeholder="Título del prompt..."
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="edit-difficulty">Dificultad</Label>
+                            <Select 
+                              value={editingPrompt.difficulty ?? undefined} 
+                              onValueChange={(value) => setEditingPrompt(prev => prev ? ({ ...prev, difficulty: value as 'facil' | 'media' | 'dificil' }) : null)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecciona dificultad" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {difficulties.filter(d => d.value && d.value.length > 0).map((difficulty) => (
+                                  <SelectItem key={difficulty.value} value={difficulty.value}>
+                                    {difficulty.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="edit-content">Contenido del Prompt</Label>
+                            <Textarea
+                              id="edit-content"
+                              value={editingPrompt.body}
+                              onChange={(e) => setEditingPrompt(prev => prev ? ({ ...prev, body: e.target.value }) : null)}
+                              placeholder="Escribe aquí el prompt..."
+                              rows={6}
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="edit-tags">Tags (separados por comas)</Label>
+                            <Input
+                              id="edit-tags"
+                              value={editingPrompt.tags.map(tag => tag.name).join(', ')}
+                              onChange={(e) => handleTagsChange(e.target.value, 'edit')}
+                              placeholder="marketing, ventas, copywriting"
+                            />
+                          </div>
+                          
+                          <div className="flex justify-end space-x-2">
+                            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                              Cancelar
+                            </Button>
+                            <Button onClick={handleUpdatePrompt}>
+                              Guardar Cambios
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
 
-              <TabsContent value="explore">
-                {renderPromptGrid()}
-              </TabsContent>
-              
               <TabsContent value="mine">
                 {renderPromptGrid()}
               </TabsContent>
@@ -345,133 +427,6 @@ const Dashboard = () => {
         <Footer />
       </div>
     </ThemeProvider>
-  );
-};
-
-// Prompt Card Component
-interface PromptCardProps {
-  prompt: Prompt;
-  onDelete: (id: string) => void;
-  onRate: (id: string, rating: number) => void;
-  onToggleFavorite: (id: string) => void;
-  isOwner: boolean;
-}
-
-const PromptCard = ({ prompt, onDelete, onRate, onToggleFavorite, isOwner }: PromptCardProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  
-  // Defensive programming - ensure arrays and numbers exist
-  const tags = prompt.tags ?? [];
-  const favoritesCount = prompt.favorites_count ?? 0;
-  const ratingAvg = prompt.rating_avg ?? 0;
-  const ratingCount = prompt.rating_count ?? 0;
-  const viewCount = prompt.view_count ?? 0;
-
-  return (
-    <Card className="h-full flex flex-col">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-lg line-clamp-2">{prompt.title}</CardTitle>
-            {prompt.description && (
-              <CardDescription className="line-clamp-2 mt-2">
-                {prompt.description}
-              </CardDescription>
-            )}
-          </div>
-          <div className="flex items-center space-x-1 ml-2">
-            {isOwner && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onDelete(prompt.id.toString())}
-                className="text-destructive hover:text-destructive"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onToggleFavorite(prompt.id.toString())}
-            >
-              <Heart className={`h-4 w-4 ${prompt.is_favorited ? 'fill-primary text-primary' : ''}`} />
-            </Button>
-          </div>
-        </div>
-        
-        {prompt.difficulty && (
-          <Badge variant="secondary" className="w-fit">
-            {prompt.difficulty}
-          </Badge>
-        )}
-      </CardHeader>
-      
-      <CardContent className="flex-1 flex flex-col">
-        <div className="flex-1">
-          <div className={`text-sm text-muted-foreground ${isExpanded ? '' : 'line-clamp-3'}`}>
-            {prompt.body || ''}
-          </div>
-          {(prompt.body || '').length > 150 && (
-            <Button
-              variant="link"
-              size="sm"
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="p-0 h-auto text-primary"
-            >
-              {isExpanded ? 'Ver menos' : 'Ver más'}
-            </Button>
-          )}
-        </div>
-        
-        {tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-4">
-            {tags.slice(0, 3).map((tag: any, index: number) => (
-              <Badge key={index} variant="outline" className="text-xs">
-                {typeof tag === 'string' ? tag : tag.name}
-              </Badge>
-            ))}
-            {tags.length > 3 && (
-              <Badge variant="outline" className="text-xs">
-                +{tags.length - 3}
-              </Badge>
-            )}
-          </div>
-        )}
-        
-        <div className="flex items-center justify-between mt-4 pt-4 border-t">
-          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-            <div className="flex items-center space-x-1">
-              <Star className="h-4 w-4" />
-              <span>{ratingAvg.toFixed(1)}</span>
-              <span>({ratingCount})</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Eye className="h-4 w-4" />
-              <span>{viewCount}</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Heart className="h-4 w-4" />
-              <span>{favoritesCount}</span>
-            </div>
-          </div>
-          
-          {!isOwner && (
-            <div className="flex space-x-1">
-              {[1, 2, 3, 4, 5].map(star => (
-                <button
-                  key={star}
-                  onClick={() => onRate(prompt.id.toString(), star)}
-                  className="text-muted-foreground hover:text-yellow-500 transition-colors"
-                >
-                  <Star className="h-4 w-4" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
   );
 };
 
