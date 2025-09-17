@@ -11,8 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Plus, Loader2, RefreshCw, AlertCircle, X } from "lucide-react";
-import { Navigate } from "react-router-dom";
+import { Plus, Loader2, RefreshCw, AlertCircle, X, ArrowLeft } from "lucide-react";
+import { Navigate, Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PaginationControls } from "@/components/PaginationControls";
@@ -304,6 +304,15 @@ const Dashboard = () => {
         
         <main className="container mx-auto px-4 py-8">
           <div className="max-w-7xl mx-auto">
+            <div className="mb-4">
+              <Button asChild variant="ghost" size="sm" className="gap-2" aria-label="Volver al playground">
+                <Link to="/">
+                  <ArrowLeft className="h-4 w-4" />
+                  Volver al playground
+                </Link>
+              </Button>
+            </div>
+
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard</h1>
               <p className="text-muted-foreground">Gestiona tus prompts y favoritos</p>

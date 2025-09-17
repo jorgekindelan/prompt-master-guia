@@ -83,16 +83,6 @@ const Header = () => {
                 {item.label}
               </button>
             ))}
-            {user && (
-              <Button
-                variant={location.pathname === '/dashboard' ? "default" : "ghost"}
-                onClick={() => navigate('/dashboard')}
-                className="flex items-center space-x-2"
-              >
-                <LayoutDashboard className="h-4 w-4" />
-                <span>Dashboard</span>
-              </Button>
-            )}
           </nav>
 
           {/* Auth & Theme Toggle & Mobile Menu */}
@@ -168,18 +158,6 @@ const Header = () => {
                   {item.label}
                 </button>
               ))}
-              {user && (
-                <button
-                  onClick={() => {
-                    navigate('/dashboard');
-                    setIsMenuOpen(false);
-                  }}
-                  className="text-left px-4 py-2 text-foreground hover:text-primary hover:bg-muted rounded-md transition-colors duration-200 flex items-center space-x-2"
-                >
-                  <LayoutDashboard className="h-4 w-4" />
-                  <span>Dashboard</span>
-                </button>
-              )}
               {user ? (
                 <>
                   <div className="px-4 py-2 text-sm text-muted-foreground">
