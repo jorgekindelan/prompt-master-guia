@@ -387,7 +387,7 @@ Organiza todo en formato fácil de seguir con mapas sugeridos y enlaces útiles.
           {filteredPrompts.map((promptItem, index) => (
             <Card 
               key={promptItem.id} 
-              className="shadow-card-custom hover:shadow-elegant transition-all duration-300 animate-scale-in"
+              className="shadow-card-custom hover:shadow-elegant transition-all duration-300 animate-scale-in flex flex-col h-full"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <CardHeader>
@@ -443,10 +443,10 @@ Organiza todo en formato fácil de seguir con mapas sugeridos y enlaces útiles.
                 </div>
               </CardHeader>
 
-              <CardContent>
-                <div className="space-y-4">
+              <CardContent className="flex-grow flex flex-col">
+                <div className="flex-grow space-y-4">
                   {/* Prompt with Show More */}
-                  <div className="bg-muted/50 rounded-lg p-4">
+                  <div className="bg-muted/50 rounded-lg p-4 flex-grow">
                     <pre className="text-sm font-mono text-foreground whitespace-pre-wrap leading-relaxed">
                       {expandedPrompts.has(promptItem.id) 
                         ? promptItem.prompt 
@@ -464,17 +464,17 @@ Organiza todo en formato fácil de seguir con mapas sugeridos y enlaces útiles.
                       </Button>
                     )}
                   </div>
-
-                   {/* Action Button */}
-                   <Button 
-                     onClick={() => copyPrompt(promptItem.prompt, promptItem.title)}
-                     className="w-full bg-primary hover:bg-primary/90"
-                     size="sm"
-                   >
-                     <Copy className="h-4 w-4 mr-2" />
-                     Copiar Prompt
-                   </Button>
                 </div>
+
+                {/* Action Button - Always at bottom */}
+                <Button 
+                  onClick={() => copyPrompt(promptItem.prompt, promptItem.title)}
+                  className="w-full bg-primary hover:bg-primary/90 mt-4"
+                  size="sm"
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copiar Prompt
+                </Button>
               </CardContent>
             </Card>
           ))}
