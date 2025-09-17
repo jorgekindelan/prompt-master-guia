@@ -16,37 +16,37 @@ const ResourcesSection = () => {
   const aiModels = [
     {
       name: "ChatGPT",
-      description: "El modelo conversacional más popular de OpenAI",
+      description: "El modelo conversacional más popular de OpenAI que revolucionó la interacción con IA. Capaz de mantener conversaciones naturales, generar código, escribir textos creativos y resolver problemas complejos. Su versión GPT-4 ofrece capacidades multimodales avanzadas y un razonamiento más sofisticado.",
       url: "https://chat.openai.com",
       price: "Freemium"
     },
     {
       name: "Claude",
-      description: "IA de Anthropic enfocada en seguridad y utilidad",
+      description: "Desarrollado por Anthropic, Claude se destaca por su enfoque en la seguridad y la utilidad práctica. Especialmente efectivo para análisis de documentos largos, programación compleja y tareas que requieren razonamiento ético. Su ventana de contexto extendida permite trabajar con textos muy extensos.",
       url: "https://claude.ai",
       price: "Freemium"
     },
     {
       name: "Gemini",
-      description: "Modelo multimodal avanzado de Google",
+      description: "El modelo multimodal más avanzado de Google que integra texto, imágenes, audio y video en una sola plataforma. Ofrece acceso en tiempo real a información actualizada de Google Search y se integra perfectamente con el ecosistema de Google Workspace.",
       url: "https://gemini.google.com",
       price: "Gratis"
     },
     {
       name: "Perplexity AI",
-      description: "Motor de búsqueda conversacional con fuentes",
+      description: "Un motor de búsqueda conversacional único que combina IA generativa con búsqueda web en tiempo real. Proporciona respuestas precisas con citas y fuentes verificables, ideal para investigación académica, periodismo y verificación de información actualizada.",
       url: "https://perplexity.ai",
       price: "Freemium"
     },
     {
       name: "Microsoft Copilot",
-      description: "Asistente IA integrado en el ecosistema Microsoft",
+      description: "Asistente de IA totalmente integrado en el ecosistema Microsoft que potencia Office 365, Windows y Edge. Especializado en productividad empresarial, análisis de datos, automatización de tareas y creación de contenido profesional con acceso directo a tus documentos y aplicaciones.",
       url: "https://copilot.microsoft.com",
       price: "Freemium"
     },
     {
       name: "Meta AI",
-      description: "Asistente de Meta para redes sociales y creatividad",
+      description: "El asistente inteligente de Meta optimizado para creatividad visual y social. Sobresale en la generación de imágenes, creación de contenido para redes sociales y conversaciones naturales. Integrado en WhatsApp, Instagram y Facebook para una experiencia social fluida.",
       url: "https://www.meta.ai",
       price: "Gratis"
     }
