@@ -26,7 +26,7 @@ const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const { createPrompt, deletePrompt, ratePrompt, toggleFavorite } = usePrompts();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string | undefined>(undefined);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("explore");
   const [newPrompt, setNewPrompt] = useState<CreatePromptData>({
@@ -41,7 +41,7 @@ const Dashboard = () => {
   // Pagination hooks for different views
   const exploreData = usePaginatedPrompts('all', { 
     search: searchTerm, 
-    difficulty: selectedDifficulty === 'all' ? undefined : selectedDifficulty 
+    difficulty: selectedDifficulty 
   });
   const myPromptsData = usePaginatedPrompts('mine');
   const favoritesData = usePaginatedPrompts('favorites');
@@ -220,17 +220,28 @@ const Dashboard = () => {
                         />
                       </div>
                       
-                      <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
-                        <SelectTrigger className="w-full sm:w-[180px]">
-                          <SelectValue placeholder="Dificultad" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Todas</SelectItem>
-                          <SelectItem value="facil">Fácil</SelectItem>
-                          <SelectItem value="media">Media</SelectItem>
-                          <SelectItem value="dificil">Difícil</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="flex gap-2">
+                        <Select value={selectedDifficulty ?? undefined} onValueChange={setSelectedDifficulty}>
+                          <SelectTrigger className="w-full sm:w-[180px]">
+                            <SelectValue placeholder="Dificultad" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="facil">Fácil</SelectItem>
+                            <SelectItem value="media">Media</SelectItem>
+                            <SelectItem value="dificil">Difícil</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {selectedDifficulty && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedDifficulty(undefined)}
+                            className="shrink-0"
+                          >
+                            ✕
+                          </Button>
+                        )}
+                      </div>
                     </>
                   )}
 

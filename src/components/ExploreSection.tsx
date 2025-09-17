@@ -16,7 +16,7 @@ const ExploreSection = () => {
   const { user } = useAuth();
   const { toggleFavorite } = usePrompts();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDifficulty, setSelectedDifficulty] = useState("");
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string | undefined>(undefined);
   const [selectedTag, setSelectedTag] = useState("");
   const [expandedPrompts, setExpandedPrompts] = useState<Set<number>>(new Set());
 
@@ -39,7 +39,6 @@ const ExploreSection = () => {
   } = usePaginatedPrompts('all', filters);
 
   const difficulties = [
-    { value: "", label: "Todos los niveles" },
     { value: "facil", label: "Fácil" },
     { value: "media", label: "Media" },
     { value: "dificil", label: "Difícil" }
@@ -162,18 +161,30 @@ const ExploreSection = () => {
                 />
 
                 {/* Difficulty Filter */}
-                <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Dificultad" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {difficulties.map((difficulty) => (
-                      <SelectItem key={difficulty.value} value={difficulty.value}>
-                        {difficulty.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2">
+                  <Select value={selectedDifficulty ?? undefined} onValueChange={setSelectedDifficulty}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Dificultad" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {difficulties.filter(d => d.value && d.value.length > 0).map((difficulty) => (
+                        <SelectItem key={difficulty.value} value={difficulty.value}>
+                          {difficulty.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedDifficulty && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedDifficulty(undefined)}
+                      className="shrink-0"
+                    >
+                      ✕
+                    </Button>
+                  )}
+                </div>
               </div>
               
               <div className="mt-4 text-sm text-muted-foreground text-center">
