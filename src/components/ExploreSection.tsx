@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Copy, Heart, Filter, Loader2 } from "lucide-react";
+import { Search, Copy, Heart, Filter, Loader2, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePaginatedPrompts } from "@/hooks/usePaginatedPrompts";
 import { PaginationControls } from "@/components/PaginationControls";
@@ -16,6 +17,7 @@ const ExploreSection = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const { toggleFavorite } = usePrompts();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string | undefined>(undefined);
   const [selectedTag, setSelectedTag] = useState("");
@@ -87,13 +89,27 @@ const ExploreSection = () => {
     <section id="explorar" className="py-20 bg-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16 animate-fade-in">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-            Explorar <span className="text-primary">Prompts</span>
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Descubre una colección curada de prompts efectivos. Filtra por categoría, 
-            copia los que más te gusten y úsalos inmediatamente.
-          </p>
+          <div className="flex flex-col items-center gap-6">
+            <div>
+              <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+                Explorar <span className="text-primary">Prompts</span>
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+                Descubre una colección curada de prompts efectivos. Filtra por categoría, 
+                copia los que más te gusten y úsalos inmediatamente.
+              </p>
+            </div>
+            {user && (
+              <Button
+                onClick={() => navigate('/dashboard')}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300"
+                size="lg"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Publicar Prompt
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Filters and Search */}
