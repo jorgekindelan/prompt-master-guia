@@ -101,7 +101,7 @@ export function PromptsProvider({ children }: { children: React.ReactNode }) {
         title: promptData.title,
         difficulty: 'facil', // default difficulty
         body: promptData.content,
-        tags: promptData.tags.map(tagName => ({ name: tagName }))
+        tags: promptData.tags || []
       };
 
       const newPrompt = await promptService.create(djangoPromptData);
@@ -143,7 +143,7 @@ export function PromptsProvider({ children }: { children: React.ReactNode }) {
       
       if (updates.title) djangoUpdates.title = updates.title;
       if (updates.content) djangoUpdates.body = updates.content;
-      if (updates.tags) djangoUpdates.tags = updates.tags.map(tagName => ({ name: tagName }));
+      if (updates.tags) djangoUpdates.tags = updates.tags;
 
       const updatedPrompt = await promptService.update(Number(id), djangoUpdates);
       

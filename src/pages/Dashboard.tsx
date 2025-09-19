@@ -16,9 +16,10 @@ import { Navigate, Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PaginationControls } from "@/components/PaginationControls";
+import { TagsInput } from "@/components/TagsInput";
 import { PromptCard } from "@/components/PromptCard";
 import { ThemeProvider } from "next-themes";
-import type { Prompt } from "@/lib/types";
+import type { Prompt, Tag } from "@/lib/types";
 
 interface CreatePromptData {
   title: string;
@@ -87,11 +88,18 @@ const Dashboard = () => {
     }
 
     try {
+      // Convert tags to the preferred backend format (array of strings)
+      const normalizedTags = Array.from(new Set(
+        newPrompt.tags
+          .map(tag => tag.name.trim().toLowerCase())
+          .filter(Boolean)
+      ));
+
       const promptData = {
         title: newPrompt.title,
         difficulty: newPrompt.difficulty,
         body: newPrompt.body,
-        tags: newPrompt.tags
+        tags: normalizedTags
       };
 
       await promptService.create(promptData);
@@ -142,11 +150,18 @@ const Dashboard = () => {
     }
 
     try {
+      // Convert tags to the preferred backend format (array of strings)
+      const normalizedTags = Array.from(new Set(
+        editingPrompt.tags
+          .map(tag => tag.name.trim().toLowerCase())
+          .filter(Boolean)
+      ));
+
       const updateData = {
         title: editingPrompt.title,
         difficulty: editingPrompt.difficulty,
         body: editingPrompt.body,
-        tags: editingPrompt.tags
+        tags: normalizedTags
       };
 
       await promptService.update(editingPrompt.id, updateData);
@@ -218,12 +233,11 @@ const Dashboard = () => {
     }
   };
 
-  const handleTagsChange = (value: string, type: 'create' | 'edit') => {
-    const tagsArray = value.split(',').map(tag => ({ name: tag.trim() })).filter(tag => tag.name.length > 0);
+  const handleTagsChange = (tags: Tag[], type: 'create' | 'edit') => {
     if (type === 'create') {
-      setNewPrompt(prev => ({ ...prev, tags: tagsArray }));
+      setNewPrompt(prev => ({ ...prev, tags }));
     } else {
-      setEditingPrompt(prev => prev ? ({ ...prev, tags: tagsArray }) : null);
+      setEditingPrompt(prev => prev ? ({ ...prev, tags }) : null);
     }
   };
 
@@ -383,15 +397,13 @@ const Dashboard = () => {
                           />
                         </div>
                         
-                        <div>
-                          <Label htmlFor="tags">Tags (separados por comas)</Label>
-                          <Input
-                            id="tags"
-                            value={newPrompt.tags.map(tag => tag.name).join(', ')}
-                            onChange={(e) => handleTagsChange(e.target.value, 'create')}
-                            placeholder="marketing, ventas, copywriting"
-                          />
-                        </div>
+                        <TagsInput
+                          value={newPrompt.tags}
+                          onChange={(tags) => handleTagsChange(tags, 'create')}
+                          label="Etiquetas"
+                          placeholder="Añadir etiqueta..."
+                          maxTags={10}
+                        />
                         
                         <div className="flex justify-end space-x-2">
                           <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
@@ -457,15 +469,13 @@ const Dashboard = () => {
                             />
                           </div>
                           
-                          <div>
-                            <Label htmlFor="edit-tags">Tags (separados por comas)</Label>
-                            <Input
-                              id="edit-tags"
-                              value={editingPrompt.tags.map(tag => tag.name).join(', ')}
-                              onChange={(e) => handleTagsChange(e.target.value, 'edit')}
-                              placeholder="marketing, ventas, copywriting"
-                            />
-                          </div>
+                          <TagsInput
+                            value={editingPrompt.tags}
+                            onChange={(tags) => handleTagsChange(tags, 'edit')}
+                            label="Etiquetas"
+                            placeholder="Añadir etiqueta..."
+                            maxTags={10}
+                          />
                           
                           <div className="flex justify-end space-x-2">
                             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>

@@ -67,7 +67,7 @@ export interface CreatePromptRequest {
   title: string;
   difficulty: 'facil' | 'media' | 'dificil';
   body: string;
-  tags: { name: string }[];
+  tags: string[];
 }
 
 export interface PromptFilters {
