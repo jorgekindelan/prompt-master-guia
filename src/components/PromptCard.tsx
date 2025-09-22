@@ -9,7 +9,7 @@ import type { Prompt } from "@/lib/types";
 interface PromptCardProps {
   prompt: Prompt;
   variant?: 'explore' | 'dashboard';
-  onToggleFavorite: (promptId: number) => void;
+  onToggleFavorite: (promptId: number) => Promise<void>;
   onEdit?: (prompt: Prompt) => void;
   onDelete?: (promptId: number) => void;
   isOwner?: boolean;
@@ -25,6 +25,7 @@ export const PromptCard = ({
 }: PromptCardProps) => {
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
 
   const copyPrompt = (content: string, title: string) => {
     navigator.clipboard.writeText(content);
@@ -91,15 +92,25 @@ export const PromptCard = ({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onToggleFavorite(prompt.id)}
+              disabled={isToggling}
+              onClick={async () => {
+                setIsToggling(true);
+                try {
+                  await onToggleFavorite(prompt.id);
+                } finally {
+                  setIsToggling(false);
+                }
+              }}
               className="hover:bg-primary/10"
+              aria-pressed={prompt.is_favorited}
+              aria-label={prompt.is_favorited ? "Quitar de favoritos" : "Añadir a favoritos"}
             >
               <Heart 
-                className={`h-4 w-4 ${
+                className={`h-4 w-4 transition-colors ${
                   prompt.is_favorited 
                     ? 'fill-red-500 text-red-500' 
                     : 'text-muted-foreground'
-                }`} 
+                } ${isToggling ? 'opacity-50' : ''}`} 
               />
             </Button>
           </div>

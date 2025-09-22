@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Plus, Loader2, RefreshCw, AlertCircle, X, ArrowLeft } from "lucide-react";
-import { Navigate, Link } from "react-router-dom";
+import { Navigate, Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PaginationControls } from "@/components/PaginationControls";
@@ -36,6 +36,7 @@ const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const { createPrompt, deletePrompt, updatePrompt, toggleFavorite } = usePrompts();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("mine");
@@ -202,7 +203,7 @@ const Dashboard = () => {
     }
   };
 
-  const handleToggleFavorite = async (id: number) => {
+  const handleToggleFavorite = async (id: number): Promise<void> => {
     if (!user) {
       toast({
         title: "Error",
@@ -224,6 +225,12 @@ const Dashboard = () => {
         myPromptsData.refresh();
       }
     } catch (error: any) {
+      // Handle 401 errors by redirecting to login
+      if (error.response?.status === 401) {
+        navigate('/');
+        return;
+      }
+      
       const errorMessage = error.response?.data?.detail || error.response?.data?.message || error.message;
       toast({
         title: "Error",
