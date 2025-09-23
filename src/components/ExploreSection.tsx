@@ -191,14 +191,13 @@ const ExploreSection = () => {
                   {/* Difficulty Filter */}
                   <div className="flex gap-2">
                     <Select 
-                      value={selectedDifficulty || ''} 
+                      value={selectedDifficulty} 
                       onValueChange={(value) => setSelectedDifficulty(value || undefined)}
                     >
                       <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Dificultad" />
+                        <SelectValue placeholder="Todas las dificultades" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Todas las dificultades</SelectItem>
                         {difficulties.map((difficulty) => (
                           <SelectItem key={difficulty.value} value={difficulty.value}>
                             {difficulty.label}
