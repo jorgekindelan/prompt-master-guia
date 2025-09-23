@@ -41,17 +41,28 @@ interface AdvancedBlock {
   content: string;
   enabled: boolean;
   order: number;
-  config?: any;
+  config?: {
+    cotOptions?: {
+      pasos: boolean;
+      preguntas: boolean;
+      verificacion: boolean;
+    };
+    reactFormat?: string;
+    jsonSchema?: string;
+    audienceProfile?: {
+      tech: number;
+      hurry: number;
+      visual: number;
+    };
+    tableColumns?: string[];
+    requiredSections?: string[];
+  };
 }
 
 interface AdvancedPromptData {
   blocks: AdvancedBlock[];
   variables: Record<string, string>;
-  metadata: {
-    title: string;
-    difficulty: string;
-    tags: string[];
-  };
+  templates: Record<string, AdvancedPromptData>;
 }
 
 // Tipos para UI
@@ -93,11 +104,7 @@ const PromptBuilder = () => {
   const [advancedData, setAdvancedData] = useState<AdvancedPromptData>({
     blocks: [],
     variables: {},
-    metadata: {
-      title: '',
-      difficulty: '',
-      tags: []
-    }
+    templates: {}
   });
 
   // Save dialog data
@@ -111,6 +118,7 @@ const PromptBuilder = () => {
   const [newItemInput, setNewItemInput] = useState('');
   const [newVariableName, setNewVariableName] = useState('');
   const [newVariableValue, setNewVariableValue] = useState('');
+  const [draggedBlock, setDraggedBlock] = useState<string | null>(null);
 
   // Helper functions para generar frases (7 pilares)
   const makeRol = (rol: string, rolCustom?: string): string => {
@@ -172,6 +180,114 @@ const PromptBuilder = () => {
     return array.filter((_, i) => i !== index);
   };
 
+  // Advanced mode helpers
+  const validateVariableName = (name: string): boolean => {
+    return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name);
+  };
+
+  const addVariable = (name: string, value: string) => {
+    if (!validateVariableName(name) || !name.trim() || !value.trim()) return;
+    setAdvancedData(prev => ({
+      ...prev,
+      variables: { ...prev.variables, [name.trim()]: value.trim() }
+    }));
+    setNewVariableName('');
+    setNewVariableValue('');
+  };
+
+  const removeVariable = (name: string) => {
+    setAdvancedData(prev => {
+      const { [name]: removed, ...rest } = prev.variables;
+      return { ...prev, variables: rest };
+    });
+  };
+
+  const addBlock = (type: AdvancedBlock['type']) => {
+    const id = Date.now().toString();
+    const titles = {
+      system: 'System Message',
+      user: 'User Instruction', 
+      assistant: 'Assistant Example',
+      cot: 'Chain of Thought',
+      react: 'ReAct Reasoning',
+      output: 'Output Structure',
+      restrictions: 'Advanced Restrictions',
+      audience: 'Audience Profile',
+      variables: 'Variables',
+      rubric: 'Evaluation Rubric'
+    };
+
+    const newBlock: AdvancedBlock = {
+      id,
+      type,
+      title: titles[type],
+      content: '',
+      enabled: true,
+      order: advancedData.blocks.length,
+      config: type === 'audience' ? { audienceProfile: { tech: 3, hurry: 3, visual: 3 } } : {}
+    };
+
+    setAdvancedData(prev => ({
+      ...prev,
+      blocks: [...prev.blocks, newBlock]
+    }));
+  };
+
+  const updateBlock = (id: string, updates: Partial<AdvancedBlock>) => {
+    setAdvancedData(prev => ({
+      ...prev,
+      blocks: prev.blocks.map(block => 
+        block.id === id ? { ...block, ...updates } : block
+      )
+    }));
+  };
+
+  const removeBlock = (id: string) => {
+    setAdvancedData(prev => ({
+      ...prev,
+      blocks: prev.blocks.filter(block => block.id !== id)
+    }));
+  };
+
+  const reorderBlocks = (dragIndex: number, hoverIndex: number) => {
+    setAdvancedData(prev => {
+      const newBlocks = [...prev.blocks];
+      const draggedBlock = newBlocks[dragIndex];
+      newBlocks.splice(dragIndex, 1);
+      newBlocks.splice(hoverIndex, 0, draggedBlock);
+      
+      // Update order
+      return {
+        ...prev,
+        blocks: newBlocks.map((block, index) => ({ ...block, order: index }))
+      };
+    });
+  };
+
+  // Advanced helpers for prompt generation
+  const makeCoT = (config?: { pasos?: boolean; preguntas?: boolean; verificacion?: boolean }): string => {
+    if (!config) return '';
+    let cotText = 'Piensa paso a paso. Razona en silencio y presenta solo la respuesta final a menos que pida lo contrario.';
+    if (config.verificacion) {
+      cotText += '\nValida tu respuesta con una comprobación breve.';
+    }
+    return cotText;
+  };
+
+  const makeJSONSchema = (schema: string): string => {
+    return schema ? `Estructura de salida (JSON):\n${schema}` : '';
+  };
+
+  const makeAudienciaAvanzada = (profile?: { tech?: number; hurry?: number; visual?: number }): string => {
+    if (!profile) return '';
+    const { tech = 3, hurry = 3, visual = 3 } = profile;
+    return `Asume audiencia con conocimiento técnico ${tech}/5, prisa ${hurry}/5 y preferencia visual ${visual}/5.`;
+  };
+
+  const makeChecklist = (items: string[]): string => {
+    return items.length > 0 ? `Antes de finalizar, verifica: ${items.join(', ')}.` : '';
+  };
+
   // Generar prompt modo sencillo
   const generateSimplePrompt = useCallback((): string => {
     const parts = [
@@ -215,6 +331,22 @@ const PromptBuilder = () => {
           break;
         case 'assistant':
           prompt += `[ASSISTANT]\n${content}\n\n`;
+          break;
+        case 'cot':
+          const cotText = makeCoT(block.config?.cotOptions);
+          prompt += `Instrucciones de razonamiento:\n${cotText}\n\n`;
+          break;
+        case 'output':
+          if (block.config?.jsonSchema) {
+            prompt += `${makeJSONSchema(block.config.jsonSchema)}\n\n`;
+          }
+          if (content) {
+            prompt += `${block.title}:\n${content}\n\n`;
+          }
+          break;
+        case 'audience':
+          const audienceText = makeAudienciaAvanzada(block.config?.audienceProfile);
+          prompt += `Audiencia:\n${audienceText}\n\n`;
           break;
         default:
           prompt += `${block.title}:\n${content}\n\n`;
@@ -299,11 +431,7 @@ const PromptBuilder = () => {
     setAdvancedData({
       blocks: [],
       variables: {},
-      metadata: {
-        title: '',
-        difficulty: '',
-        tags: []
-      }
+      templates: {}
     });
     setGeneratedPrompt('');
     setCharacterCount(0);
@@ -498,6 +626,271 @@ const PromptBuilder = () => {
     </div>
   );
 
+  // Advanced mode components
+  const VariablePanel = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Settings className="h-4 w-4" />
+          Variables
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex gap-2">
+          <Input
+            value={newVariableName}
+            onChange={(e) => setNewVariableName(e.target.value)}
+            placeholder="Nombre (ej: producto)"
+            className="flex-1"
+          />
+          <Input
+            value={newVariableValue}
+            onChange={(e) => setNewVariableValue(e.target.value)}
+            placeholder="Valor"
+            className="flex-1"
+          />
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => addVariable(newVariableName, newVariableValue)}
+            disabled={!validateVariableName(newVariableName) || !newVariableName.trim()}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        {Object.entries(advancedData.variables).length > 0 && (
+          <div className="space-y-2">
+            {Object.entries(advancedData.variables).map(([name, value]) => (
+              <div key={name} className="flex items-center gap-2 p-2 border rounded">
+                <code className="text-sm">${name}</code>
+                <span className="text-sm text-muted-foreground flex-1 truncate">= {value}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeVariable(name)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  const BlockCard = ({ block }: { block: AdvancedBlock }) => (
+    <Card className={`transition-all ${block.enabled ? '' : 'opacity-50'}`}>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="cursor-grab active:cursor-grabbing"
+                onDragStart={(e) => {
+                  setDraggedBlock(block.id);
+                  e.dataTransfer.effectAllowed = 'move';
+                }}
+                draggable
+              >
+                <ArrowUpDown className="h-4 w-4" />
+              </Button>
+              <Checkbox
+                checked={block.enabled}
+                onCheckedChange={(checked) => updateBlock(block.id, { enabled: Boolean(checked) })}
+              />
+            </div>
+            {block.title}
+          </CardTitle>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => removeBlock(block.id)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Configuración específica por tipo de bloque */}
+        {block.type === 'cot' && (
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id={`${block.id}-pasos`}
+                  checked={block.config?.cotOptions?.pasos}
+                  onCheckedChange={(checked) => updateBlock(block.id, {
+                    config: {
+                      ...block.config,
+                      cotOptions: { ...block.config?.cotOptions, pasos: Boolean(checked) }
+                    }
+                  })}
+                />
+                <label htmlFor={`${block.id}-pasos`} className="text-sm">Lista de pasos</label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id={`${block.id}-preguntas`}
+                  checked={block.config?.cotOptions?.preguntas}
+                  onCheckedChange={(checked) => updateBlock(block.id, {
+                    config: {
+                      ...block.config,
+                      cotOptions: { ...block.config?.cotOptions, preguntas: Boolean(checked) }
+                    }
+                  })}
+                />
+                <label htmlFor={`${block.id}-preguntas`} className="text-sm">Preguntas intermedias</label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id={`${block.id}-verificacion`}
+                  checked={block.config?.cotOptions?.verificacion}
+                  onCheckedChange={(checked) => updateBlock(block.id, {
+                    config: {
+                      ...block.config,
+                      cotOptions: { ...block.config?.cotOptions, verificacion: Boolean(checked) }
+                    }
+                  })}
+                />
+                <label htmlFor={`${block.id}-verificacion`} className="text-sm">Verificación final</label>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {block.type === 'audience' && (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Conocimiento técnico: {block.config?.audienceProfile?.tech || 3}/5</label>
+              <input
+                type="range"
+                min="0"
+                max="5"
+                value={block.config?.audienceProfile?.tech || 3}
+                onChange={(e) => updateBlock(block.id, {
+                  config: {
+                    ...block.config,
+                    audienceProfile: { 
+                      ...block.config?.audienceProfile, 
+                      tech: parseInt(e.target.value) 
+                    }
+                  }
+                })}
+                className="w-full"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Prisa: {block.config?.audienceProfile?.hurry || 3}/5</label>
+              <input
+                type="range"
+                min="0"
+                max="5"
+                value={block.config?.audienceProfile?.hurry || 3}
+                onChange={(e) => updateBlock(block.id, {
+                  config: {
+                    ...block.config,
+                    audienceProfile: { 
+                      ...block.config?.audienceProfile, 
+                      hurry: parseInt(e.target.value) 
+                    }
+                  }
+                })}
+                className="w-full"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Preferencia visual: {block.config?.audienceProfile?.visual || 3}/5</label>
+              <input
+                type="range"
+                min="0"
+                max="5"
+                value={block.config?.audienceProfile?.visual || 3}
+                onChange={(e) => updateBlock(block.id, {
+                  config: {
+                    ...block.config,
+                    audienceProfile: { 
+                      ...block.config?.audienceProfile, 
+                      visual: parseInt(e.target.value) 
+                    }
+                  }
+                })}
+                className="w-full"
+              />
+            </div>
+          </div>
+        )}
+
+        {block.type === 'output' && (
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id={`${block.id}-json`}
+                checked={!!block.config?.jsonSchema}
+                onCheckedChange={(checked) => updateBlock(block.id, {
+                  config: {
+                    ...block.config,
+                    jsonSchema: checked ? '{\n  "campo": "tipo"\n}' : undefined
+                  }
+                })}
+              />
+              <label htmlFor={`${block.id}-json`} className="text-sm">JSON Schema</label>
+            </div>
+            
+            {block.config?.jsonSchema && (
+              <Textarea
+                value={block.config.jsonSchema}
+                onChange={(e) => updateBlock(block.id, {
+                  config: { ...block.config, jsonSchema: e.target.value }
+                })}
+                placeholder='{ "campo": "tipo" }'
+                rows={3}
+              />
+            )}
+          </div>
+        )}
+
+        <Textarea
+          value={block.content}
+          onChange={(e) => updateBlock(block.id, { content: e.target.value })}
+          placeholder={`Contenido del bloque ${block.title}...`}
+          rows={3}
+        />
+
+        {Object.keys(advancedData.variables).length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            <span className="text-xs text-muted-foreground">Variables:</span>
+            {Object.keys(advancedData.variables).map(name => (
+              <Button
+                key={name}
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-6 text-xs"
+                onClick={() => {
+                  const textarea = document.querySelector(`textarea[value="${block.content}"]`) as HTMLTextAreaElement;
+                  if (textarea) {
+                    const cursor = textarea.selectionStart;
+                    const newContent = block.content.slice(0, cursor) + `\${${name}}` + block.content.slice(cursor);
+                    updateBlock(block.id, { content: newContent });
+                  }
+                }}
+              >
+                ${name}
+              </Button>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
   // Simple mode render
   const renderSimpleMode = () => (
     <div className="grid lg:grid-cols-2 gap-6">
@@ -570,6 +963,18 @@ const PromptBuilder = () => {
             onRemove={(index) => setSimpleData(prev => ({ ...prev, audiencia: removeFromArray(prev.audiencia, index) }))}
             placeholder="Ej: Directivos, Equipo técnico..."
           />
+          <div className="flex flex-wrap gap-2 mt-2">
+            {['Directivos', 'Equipo técnico', 'Clientes', 'Principiantes', 'Público general', 'Reclutadores'].map(chip => (
+              <Badge
+                key={chip}
+                variant="outline"
+                className="cursor-pointer hover:bg-accent"
+                onClick={() => setSimpleData(prev => ({ ...prev, audiencia: addToArray(prev.audiencia, chip) }))}
+              >
+                {chip}
+              </Badge>
+            ))}
+          </div>
         </SimpleStepCard>
 
         {/* Pilar 4: Formato de salida */}
@@ -619,6 +1024,18 @@ const PromptBuilder = () => {
             onRemove={(index) => setSimpleData(prev => ({ ...prev, restricciones: removeFromArray(prev.restricciones, index) }))}
             placeholder="Ej: máx. 150 palabras, tono formal..."
           />
+          <div className="flex flex-wrap gap-2 mt-2">
+            {['máx. 150 palabras', 'tono formal', 'sin jerga', 'cita fuentes', 'incluye ejemplos'].map(chip => (
+              <Badge
+                key={chip}
+                variant="outline"
+                className="cursor-pointer hover:bg-accent"
+                onClick={() => setSimpleData(prev => ({ ...prev, restricciones: addToArray(prev.restricciones, chip) }))}
+              >
+                {chip}
+              </Badge>
+            ))}
+          </div>
         </SimpleStepCard>
 
         {/* Pilar 6: Tono y voz */}
@@ -658,6 +1075,18 @@ const PromptBuilder = () => {
             onRemove={(index) => setSimpleData(prev => ({ ...prev, criterios: removeFromArray(prev.criterios, index) }))}
             placeholder="Ej: Claridad, Precisión, Estructura..."
           />
+          <div className="flex flex-wrap gap-2 mt-2">
+            {['Claridad', 'Precisión', 'Estructura', 'Cobertura', 'Rigor', 'Originalidad'].map(chip => (
+              <Badge
+                key={chip}
+                variant="outline"
+                className="cursor-pointer hover:bg-accent"
+                onClick={() => setSimpleData(prev => ({ ...prev, criterios: addToArray(prev.criterios, chip) }))}
+              >
+                {chip}
+              </Badge>
+            ))}
+          </div>
         </SimpleStepCard>
 
         {/* Extra 1: Contexto */}
@@ -780,32 +1209,221 @@ const PromptBuilder = () => {
     </div>
   );
 
-  // Advanced mode render - básico por ahora
+  // Advanced mode render
   const renderAdvancedMode = () => (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Modo Avanzado</h2>
-        <Button variant="outline" onClick={() => setMode('initial')}>
-          <ChevronLeft className="h-4 w-4 mr-2" />
-          Volver
-        </Button>
+    <div className="grid lg:grid-cols-2 gap-6">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold">Modo Avanzado</h2>
+          <Button variant="outline" onClick={() => setMode('initial')}>
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Volver
+          </Button>
+        </div>
+
+        <VariablePanel />
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Bloques Disponibles</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => addBlock('system')}
+                className="justify-start"
+              >
+                <User className="h-4 w-4 mr-2" />
+                System
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => addBlock('user')}
+                className="justify-start"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                User
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => addBlock('assistant')}
+                className="justify-start"
+              >
+                <Brain className="h-4 w-4 mr-2" />
+                Assistant
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => addBlock('cot')}
+                className="justify-start"
+              >
+                <Target className="h-4 w-4 mr-2" />
+                CoT
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => addBlock('react')}
+                className="justify-start"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                ReAct
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => addBlock('output')}
+                className="justify-start"
+              >
+                <BookOpen className="h-4 w-4 mr-2" />
+                Output
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => addBlock('restrictions')}
+                className="justify-start"
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                Restrictions
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => addBlock('audience')}
+                className="justify-start"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Audience
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-4">
+          {advancedData.blocks
+            .sort((a, b) => a.order - b.order)
+            .map((block) => (
+              <div
+                key={block.id}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (draggedBlock && draggedBlock !== block.id) {
+                    const draggedIndex = advancedData.blocks.findIndex(b => b.id === draggedBlock);
+                    const targetIndex = advancedData.blocks.findIndex(b => b.id === block.id);
+                    reorderBlocks(draggedIndex, targetIndex);
+                  }
+                  setDraggedBlock(null);
+                }}
+              >
+                <BlockCard block={block} />
+              </div>
+            ))}
+        </div>
       </div>
-      
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center space-y-4">
-            <Brain className="h-16 w-16 mx-auto text-muted-foreground" />
-            <h3 className="text-xl font-semibold">Modo Avanzado en Construcción</h3>
-            <p className="text-muted-foreground">
-              Esta funcionalidad estará disponible próximamente con bloques reordenables, 
-              variables, plantillas y funciones avanzadas.
-            </p>
-            <Button onClick={() => setMode('simple')}>
-              Usar Modo Sencillo por ahora
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+
+      {/* Vista previa */}
+      <div className="space-y-6">
+        <Card className="sticky top-6">
+          <CardHeader>
+            <CardTitle>Vista Previa</CardTitle>
+            <CardDescription>
+              Caracteres: {characterCount}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Textarea
+              value={generatedPrompt}
+              readOnly
+              className="min-h-[400px] font-mono text-sm"
+              placeholder="Tu prompt aparecerá aquí mientras lo construyes..."
+            />
+            
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={copyPrompt} disabled={!generatedPrompt}>
+                <Copy className="h-4 w-4 mr-2" />
+                Copiar
+              </Button>
+              
+              <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button disabled={!generatedPrompt}>
+                    <Save className="h-4 w-4 mr-2" />
+                    Guardar
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Guardar Prompt</DialogTitle>
+                    <DialogDescription>
+                      Completa la información para guardar tu prompt
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <Input
+                      value={saveData.title}
+                      onChange={(e) => setSaveData(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="Título del prompt"
+                    />
+                    <Select value={saveData.difficulty} onValueChange={(value) => setSaveData(prev => ({ ...prev, difficulty: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona la dificultad" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="facil">Fácil</SelectItem>
+                        <SelectItem value="media">Media</SelectItem>
+                        <SelectItem value="dificil">Difícil</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <ChipInput
+                      items={saveData.tags}
+                      onAdd={(item) => setSaveData(prev => ({ ...prev, tags: addToArray(prev.tags, item) }))}
+                      onRemove={(index) => setSaveData(prev => ({ ...prev, tags: removeFromArray(prev.tags, index) }))}
+                      placeholder="Etiqueta"
+                      maxItems={5}
+                    />
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
+                      Cancelar
+                    </Button>
+                    <Button onClick={savePrompt} disabled={isSaving || !saveData.title.trim()}>
+                      {isSaving ? 'Guardando...' : 'Guardar'}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              
+              <Button variant="outline" onClick={exportPrompt} disabled={!generatedPrompt}>
+                <Download className="h-4 w-4 mr-2" />
+                Exportar .txt
+              </Button>
+              
+              <Button variant="outline" onClick={resetBuilder}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Restablecer
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 
