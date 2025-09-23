@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Plus, Loader2, RefreshCw, AlertCircle, X, ArrowLeft } from "lucide-react";
+import { Plus, Loader2, RefreshCw, AlertCircle, X, ArrowLeft, ArrowRight } from "lucide-react";
 import { Navigate, Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -289,8 +289,8 @@ const Dashboard = () => {
             <div className="mb-4">
               <Button asChild variant="ghost" size="sm" className="gap-2" aria-label="Volver al playground">
                 <Link to="/">
-                  <ArrowLeft className="h-4 w-4" />
                   Volver al playground
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
             </div>
