@@ -34,7 +34,6 @@ interface EditPromptData extends CreatePromptData {
 
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
-  const { createPrompt, deletePrompt, updatePrompt, toggleFavorite } = usePrompts();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);

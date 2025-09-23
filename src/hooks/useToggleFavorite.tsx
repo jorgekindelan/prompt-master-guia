@@ -4,11 +4,13 @@ import { promptService } from '@/lib/services/promptService';
 import { useToast } from '@/hooks/use-toast';
 import type { Prompt } from '@/lib/types';
 
-// Query keys for different data types
+// Query keys for different data types - updated to match usePaginatedPrompts
 const KEYS = {
-  list: (params?: any) => ['prompts', params],
-  myFavs: (page?: number) => ['my-favorites', page],
-  myPrompts: (page?: number) => ['my-prompts', page],
+  prompts: (type: 'all' | 'mine' | 'favorites', filters?: any) => [
+    type === 'all' ? 'prompts-all' : 
+    type === 'mine' ? 'prompts-mine' : 'prompts-favorites', 
+    filters
+  ],
   detail: (id: number) => ['prompt', id],
 };
 
@@ -24,7 +26,7 @@ function patchListCache(qc: any, key: any, id: number, nextFav: boolean) {
       );
       
       // If it's favorites list and removing favorite, filter it out
-      const isFavList = String(key).includes('my-favorites');
+      const isFavList = String(key).includes('prompts-favorites');
       const finalResults = isFavList && !nextFav 
         ? results.filter((p: Prompt) => p.id !== id) 
         : results;
@@ -68,31 +70,30 @@ export function useToggleFavorite() {
     },
     
     onMutate: async ({ id, toFav }) => {
-      // Create snapshot for rollback
-      const snapshot = {
-        lists: [
-          ['prompts', { page: 1 }],
-          ['prompts', { page: 2 }], // Include a few pages that might be cached
-          ['prompts', { page: 3 }],
-        ],
-        myFavsKeys: [['my-favorites', 1], ['my-favorites', 2], ['my-favorites', 3]],
-        myPromptsKeys: [['my-prompts', 1], ['my-prompts', 2], ['my-prompts', 3]],
-        detailKey: ['prompt', id],
-      };
+      // Get all potentially cached queries to update
+      const allQueries = queryClient.getQueryCache().getAll();
       
       // Apply optimistic updates to all relevant caches
-      const allKeys = [
-        ...snapshot.lists,
-        ...snapshot.myFavsKeys,
-        ...snapshot.myPromptsKeys,
-        snapshot.detailKey,
-      ];
-      
-      allKeys.forEach((key) => {
-        patchListCache(queryClient, key, id, toFav);
+      allQueries.forEach((query) => {
+        const queryKey = query.queryKey;
+        
+        // Update prompts lists (all, mine, favorites)
+        if (Array.isArray(queryKey) && 
+            (queryKey[0] === 'prompts-all' || 
+             queryKey[0] === 'prompts-mine' || 
+             queryKey[0] === 'prompts-favorites')) {
+          patchListCache(queryClient, queryKey, id, toFav);
+        }
+        
+        // Update single prompt detail
+        if (Array.isArray(queryKey) && 
+            queryKey[0] === 'prompt' && 
+            queryKey[1] === id) {
+          patchListCache(queryClient, queryKey, id, toFav);
+        }
       });
       
-      return { snapshot, id, toFav };
+      return { id, toFav };
     },
     
     onError: (err: any, vars, ctx) => {
@@ -101,16 +102,26 @@ export function useToggleFavorite() {
       const { id, toFav } = ctx;
       const revertTo = !toFav;
       
-      // Revert all optimistic updates
-      const allKeys = [
-        ...ctx.snapshot.lists,
-        ...ctx.snapshot.myFavsKeys,
-        ...ctx.snapshot.myPromptsKeys,
-        ctx.snapshot.detailKey,
-      ];
+      // Revert all optimistic updates by re-applying with reverted state
+      const allQueries = queryClient.getQueryCache().getAll();
       
-      allKeys.forEach((key) => {
-        patchListCache(queryClient, key, id, revertTo);
+      allQueries.forEach((query) => {
+        const queryKey = query.queryKey;
+        
+        // Revert prompts lists (all, mine, favorites)
+        if (Array.isArray(queryKey) && 
+            (queryKey[0] === 'prompts-all' || 
+             queryKey[0] === 'prompts-mine' || 
+             queryKey[0] === 'prompts-favorites')) {
+          patchListCache(queryClient, queryKey, id, revertTo);
+        }
+        
+        // Revert single prompt detail
+        if (Array.isArray(queryKey) && 
+            queryKey[0] === 'prompt' && 
+            queryKey[1] === id) {
+          patchListCache(queryClient, queryKey, id, revertTo);
+        }
       });
       
       // Handle authentication errors
@@ -143,11 +154,16 @@ export function useToggleFavorite() {
       // Invalidate queries for background refetch (soft revalidation)
       queryClient.invalidateQueries({ queryKey: ['prompt', id] });
       
-      // Optionally invalidate list queries if you want fresh data
-      // This is usually not necessary with good optimistic updates
-      // queryClient.invalidateQueries({ queryKey: ['prompts'] });
-      // queryClient.invalidateQueries({ queryKey: ['my-favorites'] });
-      // queryClient.invalidateQueries({ queryKey: ['my-prompts'] });
+      // Invalidate all prompts lists to ensure consistency
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey;
+          return Array.isArray(key) && 
+                 (key[0] === 'prompts-all' || 
+                  key[0] === 'prompts-mine' || 
+                  key[0] === 'prompts-favorites');
+        }
+      });
     },
   });
 

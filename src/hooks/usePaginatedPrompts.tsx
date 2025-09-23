@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { useToast } from './use-toast';
 import { promptService } from '@/lib/services/promptService';
 import type { Prompt, PromptFilters } from '@/lib/types';
@@ -23,7 +23,6 @@ interface UsePaginatedPromptsReturn {
   setPage: (page: number) => void;
   refresh: () => void;
   retry: () => void;
-  toggleFavoriteOptimistic: (promptId: number) => Promise<boolean>;
 }
 
 export function usePaginatedPrompts(
@@ -31,58 +30,49 @@ export function usePaginatedPrompts(
   filters: PromptFilters = {}
 ): UsePaginatedPromptsReturn {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
   const { toast } = useToast();
-  
-  const [data, setData] = useState<PaginatedData>({
-    count: 0,
-    next: null,
-    previous: null,
-    results: []
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const currentPage = parseInt(searchParams.get('page') || '1', 10);
-  const totalPages = Math.ceil(data.count / 6);
 
-  const fetchData = async (page: number = currentPage) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
+  // Generate query key based on type and filters
+  const queryKey = [
+    type === 'all' ? 'prompts-all' : 
+    type === 'mine' ? 'prompts-mine' : 'prompts-favorites',
+    { page: currentPage, ...filters }
+  ];
+
+  const {
+    data,
+    isLoading,
+    error: queryError,
+    refetch
+  } = useQuery({
+    queryKey,
+    queryFn: async () => {
       let response: PaginatedData;
       
       switch (type) {
         case 'mine':
-          response = await promptService.mine(page);
+          response = await promptService.mine(currentPage);
           break;
         case 'favorites':
-          response = await promptService.myFavorites(page);
+          response = await promptService.myFavorites(currentPage);
           break;
         default:
-          response = await promptService.listAll(page, filters);
+          response = await promptService.listAll(currentPage, filters);
           break;
       }
       
-      setData(response);
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Error al cargar los prompts';
-      setError(errorMessage);
-      setData({ count: 0, next: null, previous: null, results: [] });
-      
-      // Only show toast for non-401 errors to avoid spam during auth issues
-      if (err.response?.status !== 401) {
-        toast({
-          title: "Error al cargar prompts",
-          description: errorMessage,
-          variant: "destructive"
-        });
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+      return response;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+
+  const defaultData = { count: 0, next: null, previous: null, results: [] };
+  const safeData = data || defaultData;
+  
+  const totalPages = Math.ceil(safeData.count / 6);
+  const error = queryError ? (queryError as any).response?.data?.detail || (queryError as any).message || 'Error al cargar los prompts' : null;
 
   const setPage = (page: number) => {
     if (page < 1 || page > totalPages) return;
@@ -93,108 +83,24 @@ export function usePaginatedPrompts(
   };
 
   const refresh = () => {
-    fetchData(currentPage);
+    refetch();
   };
 
   const retry = () => {
-    fetchData(currentPage);
+    refetch();
   };
-
-  const toggleFavoriteOptimistic = async (promptId: number): Promise<boolean> => {
-    // Find the prompt in current results
-    const prompt = data.results.find(p => p.id === promptId);
-    if (!prompt) return false;
-
-    const isCurrentlyFavorited = prompt.is_favorited;
-
-    // Optimistic update
-    setData(prev => ({
-      ...prev,
-      results: prev.results.map(p =>
-        p.id === promptId
-          ? {
-              ...p,
-              is_favorited: !isCurrentlyFavorited,
-              favorites_count: isCurrentlyFavorited 
-                ? (p.favorites_count || 0) - 1 
-                : (p.favorites_count || 0) + 1
-            }
-          : p
-      )
-    }));
-
-    // If we're in favorites view and unfavoriting, remove from list
-    if (type === 'favorites' && isCurrentlyFavorited) {
-      setData(prev => ({
-        ...prev,
-        results: prev.results.filter(p => p.id !== promptId),
-        count: prev.count - 1
-      }));
-    }
-
-    try {
-      if (isCurrentlyFavorited) {
-        await promptService.unfavorite(promptId);
-      } else {
-        await promptService.favorite(promptId);
-      }
-      return true;
-    } catch (error: any) {
-      // Revert optimistic update on error
-      if (type === 'favorites' && isCurrentlyFavorited) {
-        // Add back to list if we removed it
-        setData(prev => ({
-          ...prev,
-          results: [...prev.results, prompt],
-          count: prev.count + 1
-        }));
-      } else {
-        // Revert the toggle
-        setData(prev => ({
-          ...prev,
-          results: prev.results.map(p =>
-            p.id === promptId
-              ? {
-                  ...p,
-                  is_favorited: isCurrentlyFavorited,
-                  favorites_count: prompt.favorites_count || 0
-                }
-              : p
-          )
-        }));
-      }
-      
-      throw error;
-    }
-  };
-
-  // Handle page deletion scenario
-  const handleEmptyPageRedirect = () => {
-    if (data.results.length === 0 && currentPage > 1 && totalPages > 0) {
-      setPage(Math.min(currentPage - 1, totalPages));
-    }
-  };
-
-  useEffect(() => {
-    fetchData(currentPage);
-  }, [currentPage, type, filters.search, filters.difficulty, filters.tag]);
-
-  useEffect(() => {
-    handleEmptyPageRedirect();
-  }, [data.results.length, currentPage, totalPages]);
 
   return {
-    prompts: data.results ?? [],
-    loading,
+    prompts: safeData.results ?? [],
+    loading: isLoading,
     error,
     currentPage,
     totalPages,
-    totalCount: data.count,
-    hasNext: !!data.next,
-    hasPrevious: !!data.previous,
+    totalCount: safeData.count,
+    hasNext: !!safeData.next,
+    hasPrevious: !!safeData.previous,
     setPage,
     refresh,
-    retry,
-    toggleFavoriteOptimistic
+    retry
   };
 }
