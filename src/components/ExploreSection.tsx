@@ -5,18 +5,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Copy, Heart, Filter, Loader2, Plus } from "lucide-react";
+import { Search, Filter, Loader2, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePaginatedPrompts } from "@/hooks/usePaginatedPrompts";
 import { PaginationControls } from "@/components/PaginationControls";
-import { usePrompts } from "@/hooks/usePrompts";
 import { useAuth } from "@/hooks/useAuth";
 import { PromptCard } from "@/components/PromptCard";
 
 const ExploreSection = () => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const { toggleFavorite } = usePrompts();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string | undefined>(undefined);
@@ -46,18 +44,6 @@ const ExploreSection = () => {
     { value: "media", label: "Media" },
     { value: "dificil", label: "Difícil" }
   ];
-
-  const handleToggleFavorite = async (promptId: number) => {
-    if (!user) {
-      toast({
-        title: "Inicia sesión",
-        description: "Debes iniciar sesión para guardar favoritos",
-        variant: "destructive"
-      });
-      return;
-    }
-    await toggleFavorite(promptId.toString());
-  };
 
   if (loading) {
     return (
@@ -193,7 +179,6 @@ const ExploreSection = () => {
                   <PromptCard
                     prompt={promptItem}
                     variant="explore"
-                    onToggleFavorite={handleToggleFavorite}
                   />
                 </div>
               ))}

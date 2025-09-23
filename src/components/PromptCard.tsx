@@ -2,14 +2,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Heart, Edit, Trash2 } from "lucide-react";
+import { Copy, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useToggleFavorite } from "@/hooks/useToggleFavorite";
+import { HeartButton } from "@/components/HeartButton";
 import type { Prompt } from "@/lib/types";
 
 interface PromptCardProps {
   prompt: Prompt;
   variant?: 'explore' | 'dashboard';
-  onToggleFavorite: (promptId: number) => Promise<void>;
   onEdit?: (prompt: Prompt) => void;
   onDelete?: (promptId: number) => void;
   isOwner?: boolean;
@@ -18,14 +19,13 @@ interface PromptCardProps {
 export const PromptCard = ({ 
   prompt, 
   variant = 'explore',
-  onToggleFavorite, 
   onEdit, 
   onDelete,
   isOwner = false 
 }: PromptCardProps) => {
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isToggling, setIsToggling] = useState(false);
+  const toggleFavorite = useToggleFavorite();
 
   const copyPrompt = (content: string, title: string) => {
     navigator.clipboard.writeText(content);
@@ -89,30 +89,11 @@ export const PromptCard = ({
                 <Trash2 className="h-4 w-4" />
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={isToggling}
-              onClick={async () => {
-                setIsToggling(true);
-                try {
-                  await onToggleFavorite(prompt.id);
-                } finally {
-                  setIsToggling(false);
-                }
-              }}
-              className="hover:bg-primary/10"
-              aria-pressed={prompt.is_favorited}
-              aria-label={prompt.is_favorited ? "Quitar de favoritos" : "Añadir a favoritos"}
-            >
-              <Heart 
-                className={`h-4 w-4 transition-colors ${
-                  prompt.is_favorited 
-                    ? 'fill-red-500 text-red-500' 
-                    : 'text-muted-foreground'
-                } ${isToggling ? 'opacity-50' : ''}`} 
-              />
-            </Button>
+            <HeartButton
+              isOn={!!prompt.is_favorited}
+              onClick={() => toggleFavorite.mutate({ id: prompt.id, toFav: !prompt.is_favorited })}
+              disabled={toggleFavorite.isPending}
+            />
           </div>
         </div>
 

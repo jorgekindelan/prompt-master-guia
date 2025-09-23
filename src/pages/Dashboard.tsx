@@ -203,43 +203,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleToggleFavorite = async (id: number): Promise<void> => {
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "Debes iniciar sesión para guardar favoritos",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      // Use optimistic toggle from the current active data source
-      const currentData = getCurrentData();
-      await currentData.toggleFavoriteOptimistic(id);
-      
-      // Refresh the other section to keep consistency
-      if (activeTab === 'mine') {
-        favoritesData.refresh();
-      } else {
-        myPromptsData.refresh();
-      }
-    } catch (error: any) {
-      // Handle 401 errors by redirecting to login
-      if (error.response?.status === 401) {
-        navigate('/');
-        return;
-      }
-      
-      const errorMessage = error.response?.data?.detail || error.response?.data?.message || error.message;
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive"
-      });
-    }
-  };
-
   const handleTagsChange = (tags: Tag[], type: 'create' | 'edit') => {
     if (type === 'create') {
       setNewPrompt(prev => ({ ...prev, tags }));
@@ -299,7 +262,6 @@ const Dashboard = () => {
               key={prompt.id} 
               prompt={prompt} 
               variant="dashboard"
-              onToggleFavorite={handleToggleFavorite}
               onEdit={activeTab === 'mine' ? handleEditPrompt : undefined}
               onDelete={activeTab === 'mine' ? handleDeletePrompt : undefined}
               isOwner={activeTab === 'mine'}
