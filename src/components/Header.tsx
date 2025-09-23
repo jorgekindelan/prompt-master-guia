@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Moon, Sun, Brain, User, LogOut, LayoutDashboard, ChevronDown } from "lucide-react";
+import logoImage from "@/assets/logo.png";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -61,14 +62,16 @@ const Header = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div 
-            className="flex items-center space-x-2 cursor-pointer"
+            className="flex items-center space-x-3 cursor-pointer"
             onClick={() => navigate('/')}
           >
-            <div className="relative">
-              <Brain className="h-8 w-8 text-primary animate-glow" />
-            </div>
+            <img 
+              src={logoImage} 
+              alt="IA Logo" 
+              className="h-8"
+            />
             <span className="text-xl font-bold text-foreground">
-              IA <span className="text-primary">Transformers</span>
+              playground
             </span>
           </div>
 
