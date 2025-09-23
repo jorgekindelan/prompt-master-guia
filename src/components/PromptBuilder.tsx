@@ -207,7 +207,7 @@ const PromptBuilder = () => {
     return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name);
   };
 
-  const addVariable = (name: string, value: string) => {
+  const addVariable = useCallback((name: string, value: string) => {
     if (!validateVariableName(name) || !name.trim() || !value.trim()) return;
     setAdvancedData(prev => ({
       ...prev,
@@ -215,16 +215,16 @@ const PromptBuilder = () => {
     }));
     setNewVariableName('');
     setNewVariableValue('');
-  };
+  }, []);
 
-  const removeVariable = (name: string) => {
+  const removeVariable = useCallback((name: string) => {
     setAdvancedData(prev => {
       const { [name]: removed, ...rest } = prev.variables;
       return { ...prev, variables: rest };
     });
-  };
+  }, []);
 
-  const addBlock = (type: AdvancedBlock['type']) => {
+  const addBlock = useCallback((type: AdvancedBlock['type']) => {
     const id = Date.now().toString();
     const titles = {
       system: 'System Message',
@@ -239,39 +239,41 @@ const PromptBuilder = () => {
       rubric: 'Evaluation Rubric'
     };
 
-    const newBlock: AdvancedBlock = {
-      id,
-      type,
-      title: titles[type],
-      content: '',
-      enabled: true,
-      order: advancedData.blocks.length,
-      config: type === 'audience' ? { audienceProfile: { tech: 3, hurry: 3, visual: 3 } } : {}
-    };
+    setAdvancedData(prev => {
+      const newBlock: AdvancedBlock = {
+        id,
+        type,
+        title: titles[type],
+        content: '',
+        enabled: true,
+        order: prev.blocks.length,
+        config: type === 'audience' ? { audienceProfile: { tech: 3, hurry: 3, visual: 3 } } : {}
+      };
 
-    setAdvancedData(prev => ({
-      ...prev,
-      blocks: [...prev.blocks, newBlock]
-    }));
-  };
+      return {
+        ...prev,
+        blocks: [...prev.blocks, newBlock]
+      };
+    });
+  }, []);
 
-  const updateBlock = (id: string, updates: Partial<AdvancedBlock>) => {
+  const updateBlock = useCallback((id: string, updates: Partial<AdvancedBlock>) => {
     setAdvancedData(prev => ({
       ...prev,
       blocks: prev.blocks.map(block => 
         block.id === id ? { ...block, ...updates } : block
       )
     }));
-  };
+  }, []);
 
-  const removeBlock = (id: string) => {
+  const removeBlock = useCallback((id: string) => {
     setAdvancedData(prev => ({
       ...prev,
       blocks: prev.blocks.filter(block => block.id !== id)
     }));
-  };
+  }, []);
 
-  const reorderBlocks = (dragIndex: number, hoverIndex: number) => {
+  const reorderBlocks = useCallback((dragIndex: number, hoverIndex: number) => {
     setAdvancedData(prev => {
       const newBlocks = [...prev.blocks];
       const draggedBlock = newBlocks[dragIndex];
@@ -284,7 +286,7 @@ const PromptBuilder = () => {
         blocks: newBlocks.map((block, index) => ({ ...block, order: index }))
       };
     });
-  };
+  }, []);
 
   // Advanced helpers for prompt generation
   const makeCoT = (config?: { pasos?: boolean; preguntas?: boolean; verificacion?: boolean }): string => {
@@ -569,15 +571,19 @@ const PromptBuilder = () => {
     }, 300)
   , [generateFinalPrompt]);
 
-  // Effect to regenerate prompt when data changes
+  // Effect to regenerate prompt when data changes - optimized to prevent focus loss
   useEffect(() => {
     if (mode !== 'initial') {
-      debouncedGenerate();
+      const timeoutId = setTimeout(() => {
+        debouncedGenerate();
+      }, 100);
+      
+      return () => {
+        clearTimeout(timeoutId);
+        debouncedGenerate.cancel();
+      };
     }
-    return () => {
-      debouncedGenerate.cancel();
-    };
-  }, [simpleData, advancedData, mode, promptFormat, debouncedGenerate]);
+  }, [simpleData, advancedData, mode, promptFormat]);
 
   // Validaciones de pasos
   const isStepValid = useCallback((step: SimpleStep): boolean => {
@@ -739,7 +745,7 @@ const PromptBuilder = () => {
   }, [saveData, generatedPrompt, toast]);
 
   // Navigation functions
-  const goToNextStep = () => {
+  const goToNextStep = useCallback(() => {
     const currentIndex = WIZARD_STEPS.findIndex(s => s.id === currentStep);
     if (currentIndex < WIZARD_STEPS.length - 1) {
       const nextStep = WIZARD_STEPS[currentIndex + 1];
@@ -747,20 +753,20 @@ const PromptBuilder = () => {
         setCurrentStep(nextStep.id);
       }
     }
-  };
+  }, [currentStep, canNavigateToStep]);
 
-  const goToPrevStep = () => {
+  const goToPrevStep = useCallback(() => {
     const currentIndex = WIZARD_STEPS.findIndex(s => s.id === currentStep);
     if (currentIndex > 0) {
       setCurrentStep(WIZARD_STEPS[currentIndex - 1].id);
     }
-  };
+  }, [currentStep]);
 
-  const goToStep = (step: SimpleStep) => {
+  const goToStep = useCallback((step: SimpleStep) => {
     if (canNavigateToStep(step)) {
       setCurrentStep(step);
     }
-  };
+  }, [canNavigateToStep]);
 
   // Initial mode selection screen
   const renderInitialScreen = () => (
