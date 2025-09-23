@@ -286,11 +286,11 @@ const Dashboard = () => {
         
         <main className="container mx-auto px-4 py-8 flex-grow">
           <div className="max-w-7xl mx-auto">
-            <div className="mb-4">
-              <Button asChild variant="ghost" size="sm" className="gap-2" aria-label="Volver al playground">
+            <div className="mb-6">
+              <Button asChild variant="outline" size="sm" className="gap-2">
                 <Link to="/">
+                  <ArrowLeft className="h-4 w-4" />
                   Volver al playground
-                  <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
             </div>
