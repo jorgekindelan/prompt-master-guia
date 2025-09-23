@@ -281,10 +281,10 @@ const Dashboard = () => {
 
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background flex flex-col">
         <Header />
         
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-4 py-8 flex-grow">
           <div className="max-w-7xl mx-auto">
             <div className="mb-4">
               <Button asChild variant="ghost" size="sm" className="gap-2" aria-label="Volver al playground">
