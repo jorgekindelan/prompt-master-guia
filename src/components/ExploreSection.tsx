@@ -1,31 +1,79 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Loader2, Plus } from "lucide-react";
+import { Search, Filter, Loader2, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePaginatedPrompts } from "@/hooks/usePaginatedPrompts";
 import { PaginationControls } from "@/components/PaginationControls";
 import { useAuth } from "@/hooks/useAuth";
 import { PromptCard } from "@/components/PromptCard";
+import debounce from "lodash.debounce";
 
 const ExploreSection = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string | undefined>(undefined);
-  const [selectedTag, setSelectedTag] = useState("");
-  
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const filters = {
-    search: searchTerm || undefined,
-    difficulty: selectedDifficulty || undefined,
-    tag: selectedTag || undefined,
+  // Local controlled state (what user sees while typing)
+  const [searchText, setSearchText] = useState(searchParams.get('search') || '');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string | undefined>(
+    searchParams.get('difficulty') || undefined
+  );
+  const [selectedTag, setSelectedTag] = useState(searchParams.get('tag') || '');
+
+  // Applied filters (what gets sent to API)
+  const appliedFilters = {
+    search: searchParams.get('search') || undefined,
+    difficulty: searchParams.get('difficulty') || undefined,
+    tag: searchParams.get('tag') || undefined,
   };
+
+  // Apply filters function
+  const applyFilters = useCallback(() => {
+    const newParams = new URLSearchParams();
+    
+    // Add filters only if they have values
+    if (searchText.trim()) newParams.set('search', searchText.trim());
+    if (selectedDifficulty) newParams.set('difficulty', selectedDifficulty);
+    if (selectedTag.trim()) newParams.set('tag', selectedTag.trim());
+    
+    // Always reset to page 1 when applying filters
+    newParams.set('page', '1');
+    
+    setSearchParams(newParams);
+  }, [searchText, selectedDifficulty, selectedTag, setSearchParams]);
+
+  // Debounced version for auto-search
+  const debouncedApply = useMemo(
+    () => debounce(applyFilters, 350),
+    [applyFilters]
+  );
+
+  // Clear all filters
+  const clearFilters = useCallback(() => {
+    setSearchText('');
+    setSelectedDifficulty(undefined);
+    setSelectedTag('');
+    setSearchParams({ page: '1' });
+  }, [setSearchParams]);
+
+  // Auto-apply filters with debounce when user stops typing
+  useEffect(() => {
+    debouncedApply();
+    return () => debouncedApply.cancel();
+  }, [searchText, selectedDifficulty, selectedTag, debouncedApply]);
+
+  // Sync local state with URL params when they change externally
+  useEffect(() => {
+    setSearchText(searchParams.get('search') || '');
+    setSelectedDifficulty(searchParams.get('difficulty') || undefined);
+    setSelectedTag(searchParams.get('tag') || '');
+  }, [searchParams.get('search'), searchParams.get('difficulty'), searchParams.get('tag')]);
 
   const {
     prompts,
@@ -35,9 +83,15 @@ const ExploreSection = () => {
     totalPages,
     hasNext,
     hasPrevious,
-    setPage,
     retry
-  } = usePaginatedPrompts('all', filters);
+  } = usePaginatedPrompts('all', appliedFilters);
+
+  // Handle page change while preserving filters
+  const handlePageChange = useCallback((page: number) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('page', page.toString());
+    setSearchParams(newParams);
+  }, [searchParams, setSearchParams]);
 
   const difficulties = [
     { value: "facil", label: "Fácil" },
@@ -108,51 +162,86 @@ const ExploreSection = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Search */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  debouncedApply.cancel(); // Cancel any pending debounced call
+                  applyFilters(); // Apply immediately
+                }}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Search */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar prompts..."
+                      value={searchText}
+                      onChange={(e) => setSearchText(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+
+                  {/* Tag Filter */}
                   <Input
-                    placeholder="Buscar prompts..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
+                    placeholder="Filtrar por tag..."
+                    value={selectedTag}
+                    onChange={(e) => setSelectedTag(e.target.value)}
                   />
-                </div>
 
-                {/* Tag Filter */}
-                <Input
-                  placeholder="Filtrar por tag..."
-                  value={selectedTag}
-                  onChange={(e) => setSelectedTag(e.target.value)}
-                />
-
-                {/* Difficulty Filter */}
-                <div className="flex gap-2">
-                  <Select value={selectedDifficulty ?? undefined} onValueChange={setSelectedDifficulty}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Dificultad" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {difficulties.filter(d => d.value && d.value.length > 0).map((difficulty) => (
-                        <SelectItem key={difficulty.value} value={difficulty.value}>
-                          {difficulty.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {selectedDifficulty && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedDifficulty(undefined)}
-                      className="shrink-0"
+                  {/* Difficulty Filter */}
+                  <div className="flex gap-2">
+                    <Select 
+                      value={selectedDifficulty || ''} 
+                      onValueChange={(value) => setSelectedDifficulty(value || undefined)}
                     >
-                      ✕
-                    </Button>
-                  )}
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Dificultad" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Todas las dificultades</SelectItem>
+                        {difficulties.map((difficulty) => (
+                          <SelectItem key={difficulty.value} value={difficulty.value}>
+                            {difficulty.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {selectedDifficulty && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedDifficulty(undefined)}
+                        className="shrink-0"
+                        aria-label="Limpiar filtro de dificultad"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
+                
+                {/* Action buttons */}
+                <div className="flex justify-center gap-2 mt-4">
+                  <Button 
+                    type="submit"
+                    variant="default"
+                    aria-label="Buscar prompts"
+                  >
+                    <Search className="h-4 w-4 mr-2" />
+                    Buscar
+                  </Button>
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    onClick={clearFilters}
+                    aria-label="Limpiar todos los filtros"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Limpiar filtros
+                  </Button>
+                </div>
+              </form>
               
               <div className="mt-4 text-sm text-muted-foreground text-center">
                 Página {currentPage} de {totalPages} | Mostrando {prompts.length} prompts
@@ -189,7 +278,7 @@ const ExploreSection = () => {
               totalPages={totalPages}
               hasNext={hasNext}
               hasPrevious={hasPrevious}
-              onPageChange={setPage}
+              onPageChange={handlePageChange}
             />
           </>
         )}
