@@ -1,4 +1,4 @@
-import { Brain } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 const Footer = () => {
   return (
@@ -7,9 +7,9 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row items-center justify-between">
           {/* Brand */}
           <div className="flex items-center space-x-2 mb-4 md:mb-0">
-            <Brain className="h-6 w-6 text-primary" />
+            <img src={logo} alt="Logo" className="h-6 w-6" />
             <span className="text-lg font-semibold text-foreground">
-              IA <span className="text-primary">Transformers</span>
+              playground
             </span>
           </div>
 
