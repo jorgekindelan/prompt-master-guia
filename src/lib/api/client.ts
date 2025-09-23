@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE || 'https://iat-backend-1.onrender.com/api';
 
 // Create axios instance
 const apiClient = axios.create({
