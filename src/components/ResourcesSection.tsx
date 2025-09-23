@@ -111,14 +111,14 @@ const ResourcesSection = () => {
 
         {/* Glossary Section */}
         <div className="mt-20 animate-fade-in">
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center space-x-3 mb-4">
+          <div className="mb-12">
+            <div className="flex items-center space-x-3 mb-4">
               <div className="p-3 rounded-lg bg-primary">
                 <Book className="h-6 w-6 text-white" />
               </div>
               <h3 className="text-3xl font-bold text-foreground">Diccionario de Términos</h3>
             </div>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-muted-foreground max-w-2xl">
               Conceptos esenciales que todo usuario de IA debe conocer
             </p>
           </div>
