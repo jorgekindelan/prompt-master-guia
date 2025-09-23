@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Copy, Download, RefreshCw, ChevronLeft, ChevronRight, User, Target, Users, Volume2, Palette, BookOpen, Shield, Plus, X, Save, ArrowUpDown, Settings, Brain, FileText, Code, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -1768,13 +1769,90 @@ const PromptBuilder = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-4">
-              {advancedData.blocks
-                .sort((a, b) => a.order - b.order)
-                .map(block => (
-                  <BlockCard key={block.id} block={block} />
-                ))}
-            </div>
+            <Card>
+              <CardContent className="p-0">
+                <Tabs defaultValue="all" className="w-full">
+                  <div className="px-4 pt-4">
+                    <TabsList className="grid w-full grid-cols-4">
+                      <TabsTrigger value="all">
+                        Todos ({advancedData.blocks.length})
+                      </TabsTrigger>
+                      <TabsTrigger value="core">
+                        Core ({advancedData.blocks.filter(b => ['system', 'user', 'assistant'].includes(b.type)).length})
+                      </TabsTrigger>
+                      <TabsTrigger value="reasoning">
+                        Reasoning ({advancedData.blocks.filter(b => ['cot', 'react'].includes(b.type)).length})
+                      </TabsTrigger>
+                      <TabsTrigger value="config">
+                        Config ({advancedData.blocks.filter(b => ['output', 'restrictions', 'audience', 'rubric'].includes(b.type)).length})
+                      </TabsTrigger>
+                    </TabsList>
+                  </div>
+                  
+                  <ScrollArea className="h-[600px]">
+                    <div className="p-4">
+                      <TabsContent value="all" className="mt-0">
+                        <div className="space-y-3">
+                          {advancedData.blocks
+                            .sort((a, b) => a.order - b.order)
+                            .map(block => (
+                              <BlockCard key={block.id} block={block} />
+                            ))}
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="core" className="mt-0">
+                        <div className="space-y-3">
+                          {advancedData.blocks
+                            .filter(block => ['system', 'user', 'assistant'].includes(block.type))
+                            .sort((a, b) => a.order - b.order)
+                            .map(block => (
+                              <BlockCard key={block.id} block={block} />
+                            ))}
+                          {advancedData.blocks.filter(b => ['system', 'user', 'assistant'].includes(b.type)).length === 0 && (
+                            <p className="text-muted-foreground text-center py-8">
+                              No hay bloques core. Añade bloques System, User o Assistant.
+                            </p>
+                          )}
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="reasoning" className="mt-0">
+                        <div className="space-y-3">
+                          {advancedData.blocks
+                            .filter(block => ['cot', 'react'].includes(block.type))
+                            .sort((a, b) => a.order - b.order)
+                            .map(block => (
+                              <BlockCard key={block.id} block={block} />
+                            ))}
+                          {advancedData.blocks.filter(b => ['cot', 'react'].includes(b.type)).length === 0 && (
+                            <p className="text-muted-foreground text-center py-8">
+                              No hay bloques de razonamiento. Añade bloques CoT o ReAct.
+                            </p>
+                          )}
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="config" className="mt-0">
+                        <div className="space-y-3">
+                          {advancedData.blocks
+                            .filter(block => ['output', 'restrictions', 'audience', 'rubric'].includes(block.type))
+                            .sort((a, b) => a.order - b.order)
+                            .map(block => (
+                              <BlockCard key={block.id} block={block} />
+                            ))}
+                          {advancedData.blocks.filter(b => ['output', 'restrictions', 'audience', 'rubric'].includes(b.type)).length === 0 && (
+                            <p className="text-muted-foreground text-center py-8">
+                              No hay bloques de configuración. Añade bloques Output, Restrictions, Audience o Rubric.
+                            </p>
+                          )}
+                        </div>
+                      </TabsContent>
+                    </div>
+                  </ScrollArea>
+                </Tabs>
+              </CardContent>
+            </Card>
           )}
         </div>
 
