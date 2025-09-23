@@ -183,17 +183,6 @@ const RegisterForm = ({ onSwitchToLogin, onClose }: RegisterFormProps) => {
           </Button>
         </form>
 
-        <Separator />
-
-        <div className="space-y-4">
-          <Button variant="outline" className="w-full">
-            Continuar con Google
-          </Button>
-          <Button variant="outline" className="w-full">
-            Continuar con GitHub
-          </Button>
-        </div>
-
         <div className="text-center text-sm text-muted-foreground">
           ¿Ya tienes cuenta?{" "}
           <Button 

@@ -101,17 +101,6 @@ const LoginForm = ({ onSwitchToRegister, onClose }: LoginFormProps) => {
           </Button>
         </div>
 
-        <Separator />
-
-        <div className="space-y-4">
-          <Button variant="outline" className="w-full">
-            Continuar con Google
-          </Button>
-          <Button variant="outline" className="w-full">
-            Continuar con GitHub
-          </Button>
-        </div>
-
         <div className="text-center text-sm text-muted-foreground">
           ¿No tienes cuenta?{" "}
           <Button 
