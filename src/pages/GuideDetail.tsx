@@ -3,7 +3,9 @@ import { ThemeProvider } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Copy, BookOpen, Lightbulb, Code, Palette, Brain, ArrowRight } from "lucide-react";
+import { ArrowLeft, Copy, BookOpen, Lightbulb, Code, Palette, Brain, ArrowRight, AlertTriangle, CheckCircle, Info, Database, Link as LinkIcon, Settings, Shield, Image as ImageIcon, GitBranch } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -12,6 +14,7 @@ const GuideDetail = () => {
   const { category, itemId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [selectedFormat, setSelectedFormat] = useState<'json' | 'html' | 'text'>('json');
 
   const guideData: Record<string, any> = {
     fundamentos: {
